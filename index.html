@@ -886,12 +886,17 @@ function makeCelloIon(t) {
   // 電気的中性を保つためのイオン移動:
   //   Zn²⁺ が ZnSO₄(左) → CuSO₄(右) 側へ少し
   //   SO₄²⁻ が CuSO₄(右) → ZnSO₄(左) 側へ
+  // 各粒子に固定の y を持たせて水平方向のみ移動させる
   const isCation = (t < 0.5);
+  const yPos = isCation
+    ? 0.20 + (t / 0.5) * 0.60         // Zn²⁺ は 0.20..0.80
+    : 0.28 + ((t - 0.5) / 0.5) * 0.60; // SO₄²⁻ は 0.28..0.88 (Zn²⁺ と少しずらす)
   return {
     t: t,
     type: isCation ? 'Zn²⁺' : 'SO₄²⁻',
     dir: isCation ? 1 : -1,
     color: isCation ? '#E8A040' : '#5FA878',
+    yPos: yPos,
   };
 }
 
@@ -1377,8 +1382,8 @@ function drawZnEmit(p, L) {
 }
 
 function drawCelloIon(p, L) {
-  // labeled ion crossing through cellophane region
-  const baseY = lerp(L.liquidTopY + 20, L.liquidBottomY - 20, ((p.t * 1.5 + 0.2) % 1));
+  // labeled ion crossing through cellophane region — moves horizontally only
+  const baseY = lerp(L.liquidTopY + 20, L.liquidBottomY - 20, p.yPos);
   const cx = L.cellophaneX + L.cellophaneW / 2;
   const startX = p.dir > 0 ? cx - canvasW * 0.05 : cx + canvasW * 0.05;
   const endX = p.dir > 0 ? cx + canvasW * 0.05 : cx - canvasW * 0.05;

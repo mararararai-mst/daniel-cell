@@ -139,6 +139,38 @@ input[type="range"] {
   width: 130px;
   accent-color: var(--accent);
 }
+.charge-bar-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6a5a40;
+}
+.charge-bar {
+  width: 110px;
+  height: 12px;
+  background: #ECE3CC;
+  border-radius: 999px;
+  border: 1.5px solid #BFAE85;
+  overflow: hidden;
+  position: relative;
+}
+#charge-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #E8A040 0%, #5FA8D8 60%, #4CB780 100%);
+  transition: width 0.18s ease;
+  border-radius: 999px;
+}
+.btn.charging {
+  background: #5FA8D8;
+  color: #fff;
+  border-color: #5FA8D8;
+  box-shadow: 2px 2px 0 #2E6E97;
+}
+.btn.charging:hover { box-shadow: 3px 3px 0 #2E6E97; }
+.btn.charging:active { box-shadow: 1px 1px 0 #2E6E97; }
 .step-info {
   margin-top: 12px;
   background: #FFF4E0;
@@ -239,6 +271,12 @@ sub, sup { font-size: 0.7em; }
 
     <div id="auto-controls" style="display: contents;">
       <button id="play-btn" class="btn primary">▶ 動かす</button>
+      <button id="charge-btn" class="btn">⚡ 充電する</button>
+      <div class="charge-bar-wrap" title="電池残量">
+        <span class="charge-label">残量</span>
+        <div class="charge-bar"><div id="charge-bar-fill"></div></div>
+        <span id="charge-percent">100%</span>
+      </div>
       <div class="slider-wrap">
         <span>速さ</span>
         <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1">
@@ -284,6 +322,12 @@ let mode = MODES.AUTO;
 let playing = false;
 let speedMul = 1.0;
 let stepIndex = 0;
+// Battery charge level: 1.0 = full, 0.0 = depleted
+// Discharges while playing in AUTO mode, recharges while isCharging=true (二次電池 = 充電池)
+let chargeLevel = 1.0;
+let isCharging = false;
+const FULL_DISCHARGE_TICKS = 60 * 90; // ~90 seconds at 60fps speed×1
+const CHARGE_SPEED_MULT = 2.0;       // charges roughly 2× faster than it discharges
 
 // Step definitions: which animations are active
 // flags: zn (Zn dissolution), e (electron flow), cu (Cu deposition), cellophane (ion through cellophane), labels (show labels)
@@ -300,6 +344,10 @@ const STEPS = [
     flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
   { title: '全体が連動する', desc: '亜鉛が溶け、電子が導線を流れ、銅が析出し、イオンがセロハンを通る——これらが同時に起きて、約1.1Vの電圧を長時間安定して取り出せます。',
     flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
+  { title: '電池がへたってきた', desc: '時間がたつと、亜鉛板はやせ細り、CuSO₄水溶液の青色は薄くなります（Cu²⁺が消費されたため）。ZnSO₄水溶液はだんだん濃くなります。やがて電圧が下がり、電池は使えなくなります。',
+    flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true }, depletedDemo: true },
+  { title: '充電で復活させる', desc: '外部電源で「逆向き」の電流を流すと、銅板にたまった銅がCu²⁺に戻り、Zn²⁺は亜鉛板に戻ります。低下した電圧が回復し、再び使えるようになります。これを充電といい、充電できる電池を二次電池（蓄電池）といいます。',
+    flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true }, chargingDemo: true },
 ];
 
 // ----- Helpers
@@ -503,42 +551,83 @@ function draw() {
   drawBeakerLabels(L);
 
   // === Animations (based on flags + playing state)
-  const dt = (mode === MODES.AUTO ? (playing ? 1 : 0) : 1) * speedMul;
+  // direction: 1 = discharge (normal), -1 = charge (reverse)
+  // In step-execution mode, we don't deplete/charge automatically — only animate
+  let animActive = false;
+  let direction = 1;
+  if (mode === MODES.AUTO) {
+    if (isCharging) { animActive = true; direction = -1; }
+    else if (playing) { animActive = true; direction = 1; }
+  } else {
+    // step mode: animate based on step flags
+    animActive = true;
+    const stepDef = STEPS[stepIndex];
+    if (stepDef && stepDef.chargingDemo) direction = -1;
+  }
+  const dt = (animActive ? 1 : 0) * speedMul;
 
-  // Electrons
+  // Update charge level (AUTO mode only; step mode demos handle their own state)
+  if (mode === MODES.AUTO && animActive) {
+    if (direction === 1) {
+      chargeLevel = Math.max(0, chargeLevel - (speedMul / FULL_DISCHARGE_TICKS));
+      if (chargeLevel <= 0) {
+        playing = false;
+        document.getElementById('play-btn').textContent = '▶ 動かす';
+      }
+    } else {
+      chargeLevel = Math.min(1, chargeLevel + (speedMul * CHARGE_SPEED_MULT / FULL_DISCHARGE_TICKS));
+      if (chargeLevel >= 1) {
+        isCharging = false;
+        document.getElementById('charge-btn').textContent = '⚡ 充電する';
+        document.getElementById('charge-btn').classList.remove('charging');
+      }
+    }
+  } else if (mode === MODES.STEP) {
+    // Step demos use synthetic charge level for visual effect
+    const stepDef = STEPS[stepIndex];
+    if (stepDef && stepDef.depletedDemo) chargeLevel = Math.max(0.15, chargeLevel - 0.012 * speedMul);
+    else if (stepDef && stepDef.chargingDemo) chargeLevel = Math.min(1, chargeLevel + 0.008 * speedMul);
+    else chargeLevel = 1.0;
+  }
+  updateChargeUI();
+
+  // Electrons (direction-aware: charging reverses the flow)
   if (activeFlags.e) {
     for (let i = 0; i < electronPos.length; i++) {
-      electronPos[i] = (electronPos[i] + 0.005 * dt) % electronTotalLen;
+      electronPos[i] = ((electronPos[i] + 0.005 * dt * direction) % electronTotalLen + electronTotalLen) % electronTotalLen;
       drawElectronAt(electronPos[i], L);
     }
   }
 
-  // Zn²⁺ + electrons emerging from Zn electrode (the "left behind" electrons)
+  // Zn²⁺ + electrons emerging from Zn electrode (or returning during charge)
   if (activeFlags.zn) {
     for (let p of znEmit) {
-      p.t += 0.008 * dt;
+      p.t += 0.008 * dt * direction;
       if (p.t > 1) { p.t = 0; p.surfaceY = Math.random(); }
+      if (p.t < 0) { p.t = 1; p.surfaceY = Math.random(); }
       drawZnEmit(p, L);
     }
     for (let p of zn2) {
-      p.t += 0.004 * dt;
+      p.t += 0.004 * dt * direction;
       if (p.t > 1) { p.t = 0; p.surfaceY = Math.random(); p.driftAmount = 0.55 + Math.random() * 0.30; }
+      if (p.t < 0) { p.t = 1; p.surfaceY = Math.random(); p.driftAmount = 0.55 + Math.random() * 0.30; }
       drawZn2(p, L);
     }
   }
   // Cu²⁺
   if (activeFlags.cu) {
     for (let p of cu2) {
-      p.t += 0.005 * dt;
+      p.t += 0.005 * dt * direction;
       if (p.t > 1) p.t = 0;
+      if (p.t < 0) p.t = 1;
       drawCu2(p, L);
     }
   }
-  // Cellophane ion crossings
+  // Cellophane ion crossings (direction-aware)
   if (activeFlags.cellophane) {
     for (let p of celloIons) {
       p.t += 0.004 * dt;
-      if (p.t > 1) { p.t = 0; p.dir = (Math.random() < 0.5 ? 1 : -1); }
+      if (p.t > 1) { p.t = 0; p.dir = (Math.random() < 0.5 ? 1 : -1) * direction; }
       drawCelloIon(p, L);
     }
   }
@@ -555,12 +644,23 @@ function drawBeaker(x, y, w, h, liquid) {
   noFill();
   stroke(140, 130, 110, 200);
   strokeWeight(3);
-  // glass body
   rect(x, y, w, h, 4, 4, 14, 14);
-  // liquid
+  // liquid color depends on charge level (chargeLevel: 1.0 = full, 0.0 = depleted)
   noStroke();
-  if (liquid === 'znso4') fill(232, 241, 245, 220);  // pale blue/clear
-  else fill(95, 168, 216, 200);                       // cuso4 blue
+  if (liquid === 'znso4') {
+    // ZnSO₄: at full = ほぼ無色(淡水色), at empty = ほんのり濃く見える色
+    // 教科書: 電流が流れると硫酸亜鉛水溶液の濃度は少しずつ大きくなる
+    const r = lerp(232, 200, 1 - chargeLevel);
+    const g = lerp(241, 220, 1 - chargeLevel);
+    const b = lerp(245, 230, 1 - chargeLevel);
+    fill(r, g, b, 220);
+  } else {
+    // CuSO₄: at full = 濃い青, at empty = ほぼ無色（教科書: 色がうすくなっていく）
+    const r = lerp(220, 95, chargeLevel);
+    const g = lerp(232, 168, chargeLevel);
+    const b = lerp(240, 216, chargeLevel);
+    fill(r, g, b, 200);
+  }
   rect(x + 4, y + (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)), w - 8, h - (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)) - 6, 0, 0, 12, 12);
 }
 
@@ -628,9 +728,8 @@ function drawVoltMeter(L) {
     const y2 = cy + Math.sin(a) * r;
     line(x1, y1, x2, y2);
   }
-  // needle - resting at 0 if no voltage, swings to ~1.1V (about 73% of scale to 1.5V)
-  const targetFrac = activeFlags.voltage ? 1.1 / 1.5 : 0;
-  // smooth approach
+  // needle - resting at 0 if no voltage, swings to ~1.1V × chargeLevel (depleted → drops)
+  const targetFrac = activeFlags.voltage ? (1.1 / 1.5) * Math.max(chargeLevel, 0.05) : 0;
   if (typeof drawVoltMeter._cur === 'undefined') drawVoltMeter._cur = 0;
   drawVoltMeter._cur += (targetFrac - drawVoltMeter._cur) * 0.08;
   const a = PI + drawVoltMeter._cur * PI;
@@ -794,6 +893,16 @@ function drawIon(x, y, label, colorHex, alpha) {
   text(label, x, y);
 }
 
+// ===== UI helpers =====
+function updateChargeUI() {
+  const fill = document.getElementById('charge-bar-fill');
+  const pct = document.getElementById('charge-percent');
+  if (!fill || !pct) return;
+  const v = Math.max(0, Math.min(1, chargeLevel));
+  fill.style.width = (v * 100).toFixed(0) + '%';
+  pct.textContent = Math.round(v * 100) + '%';
+}
+
 // ===== UI wiring =====
 function updateModeUI() {
   const auto = document.getElementById('mode-auto');
@@ -831,9 +940,36 @@ document.getElementById('mode-step').addEventListener('click', () => {
 });
 
 document.getElementById('play-btn').addEventListener('click', () => {
+  // If we were charging, stop charging first
+  if (isCharging) {
+    isCharging = false;
+    document.getElementById('charge-btn').textContent = '⚡ 充電する';
+    document.getElementById('charge-btn').classList.remove('charging');
+  }
+  // If depleted, refuse to discharge further (must charge first)
+  if (chargeLevel <= 0 && !playing) {
+    // do nothing — user needs to press 充電する
+    return;
+  }
   playing = !playing;
   document.getElementById('play-btn').textContent = playing ? '⏸ 一時停止' : '▶ 動かす';
   activeFlags.voltage = playing;
+});
+
+document.getElementById('charge-btn').addEventListener('click', () => {
+  if (isCharging) {
+    isCharging = false;
+    document.getElementById('charge-btn').textContent = '⚡ 充電する';
+    document.getElementById('charge-btn').classList.remove('charging');
+  } else {
+    // start charging — stop discharge first
+    playing = false;
+    document.getElementById('play-btn').textContent = '▶ 動かす';
+    isCharging = true;
+    document.getElementById('charge-btn').textContent = '⏹ 充電をやめる';
+    document.getElementById('charge-btn').classList.add('charging');
+    activeFlags.voltage = true; // show voltage during charge
+  }
 });
 
 document.getElementById('speed').addEventListener('input', (e) => {
@@ -843,13 +979,18 @@ document.getElementById('speed').addEventListener('input', (e) => {
 
 document.getElementById('reset-btn').addEventListener('click', () => {
   playing = false;
+  isCharging = false;
   document.getElementById('play-btn').textContent = '▶ 動かす';
+  document.getElementById('charge-btn').textContent = '⚡ 充電する';
+  document.getElementById('charge-btn').classList.remove('charging');
   activeFlags.voltage = false;
+  chargeLevel = 1.0;
   resetIons();
   for (let i = 0; i < electronPos.length; i++) {
     electronPos[i] = (i / N_ELECTRONS) * electronTotalLen;
   }
   drawVoltMeter._cur = 0;
+  updateChargeUI();
 });
 
 document.getElementById('prev-step').addEventListener('click', () => {

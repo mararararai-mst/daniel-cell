@@ -630,15 +630,12 @@ function drawBeaker(x, y, w, h, liquid) {
   stroke(140, 130, 110, 200);
   strokeWeight(3);
   rect(x, y, w, h, 4, 4, 14, 14);
-  // liquid color depends on charge level (chargeLevel: 1.0 = full, 0.0 = depleted)
+  // liquid color
   noStroke();
   if (liquid === 'znso4') {
-    // ZnSO₄: at full = ほぼ無色(淡水色), at empty = ほんのり濃く見える色
-    // 教科書: 電流が流れると硫酸亜鉛水溶液の濃度は少しずつ大きくなる
-    const r = lerp(232, 200, 1 - chargeLevel);
-    const g = lerp(241, 220, 1 - chargeLevel);
-    const b = lerp(245, 230, 1 - chargeLevel);
-    fill(r, g, b, 220);
+    // ZnSO₄ は無色（Zn²⁺は可視光を吸収しないため色がつかない）。
+    // 教科書では「濃度は少しずつ大きくなる」とあるが、色変化はしない。
+    fill(232, 241, 245, 220);
   } else {
     // CuSO₄: at full = 濃い青, at empty = ほぼ無色（教科書: 色がうすくなっていく）
     const r = lerp(220, 95, chargeLevel);

@@ -39,19 +39,79 @@ html, body {
   min-height: 100vh;
 }
 .wrap {
-  max-width: 1480px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 16px 20px 40px;
 }
-.main-layout {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 260px;
-  gap: 14px;
-  align-items: start;
+.explainer-toggles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
-@media (max-width: 1180px) {
-  .main-layout { grid-template-columns: 1fr; }
+.explainer-toggle-btn {
+  background: #fff;
+  border: 2px solid;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
 }
+.explainer-toggle-btn.minus { border-color: #4A7BAA; color: #4A7BAA; box-shadow: 2px 2px 0 #4A7BAA; }
+.explainer-toggle-btn.plus { border-color: #D97A4B; color: #D97A4B; box-shadow: 2px 2px 0 #D97A4B; }
+.explainer-toggle-btn:hover { transform: translate(-1px, -1px); }
+.explainer-toggle-btn.minus.active { background: #4A7BAA; color: #fff; }
+.explainer-toggle-btn.plus.active { background: #D97A4B; color: #fff; }
+.stage { position: relative; }
+.overlay-explainer {
+  position: absolute;
+  top: 14px;
+  width: 320px;
+  max-width: 40%;
+  max-height: calc(100% - 28px);
+  background: rgba(255, 251, 240, 0.97);
+  border: 2px solid #EADFC4;
+  border-radius: 14px;
+  padding: 14px 16px 14px 16px;
+  display: none;
+  z-index: 10;
+  overflow-y: auto;
+  box-shadow: 0 6px 20px rgba(120, 100, 80, 0.18);
+  backdrop-filter: blur(2px);
+}
+.overlay-explainer.minus { border-left: 5px solid #4A7BAA; left: 14px; }
+.overlay-explainer.plus { border-left: 5px solid #D97A4B; right: 14px; }
+.overlay-explainer.show { display: block; animation: pop-in 0.18s ease-out; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.overlay-explainer .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #8a7a60;
+  padding: 2px 6px;
+  line-height: 1;
+}
+.overlay-explainer .close-btn:hover { color: #444; }
+.overlay-explainer h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.overlay-explainer.minus h3 { color: #4A7BAA; }
+.overlay-explainer.plus h3 { color: #D97A4B; }
 .side-panel {
   background: var(--paper);
   border: 2px solid #EADFC4;
@@ -555,105 +615,101 @@ sub, sup { font-size: 0.7em; }
     <span class="sub">中3 理科 ／ 単元1-3 化学変化と電池</span>
   </header>
 
-  <div class="main-layout">
-    <aside class="side-panel minus">
-      <details>
-        <summary>🔋 (-)極（亜鉛側）</summary>
-        <div class="panel-content">
-          <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" class="textbook-svg" aria-label="(-)極の反応の図解">
-            <text x="100" y="14" text-anchor="middle" fill="#4A7BAA" font-size="11" font-weight="700">電子が銅板へ向かって移動する</text>
-            <line x1="100" y1="22" x2="100" y2="38" stroke="#4A7BAA" stroke-width="2.5"/>
-            <polygon points="100,20 95,30 105,30" fill="#4A7BAA"/>
-            <path d="M 22 95 L 22 270 Q 22 282 34 282 L 166 282 Q 178 282 178 270 L 178 95 Z" fill="#E0EEF2" stroke="#6a6a6a" stroke-width="1.8"/>
-            <rect x="24" y="97" width="152" height="28" fill="#FAFAF0"/>
-            <line x1="24" y1="125" x2="176" y2="125" stroke="#a0b0bc" stroke-width="1" stroke-dasharray="2,2"/>
-            <rect x="86" y="40" width="28" height="220" fill="#9CA0A4" stroke="#5a5a5a" stroke-width="1.2"/>
-            <text x="100" y="160" text-anchor="middle" fill="#222" font-weight="800" font-size="14">Zn</text>
-            <g>
-              <circle cx="100" cy="60" r="6.5" fill="#4A7BAA"/><text x="100" y="64" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-              <circle cx="100" cy="80" r="6.5" fill="#4A7BAA"/><text x="100" y="84" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-              <circle cx="100" cy="100" r="6.5" fill="#4A7BAA"/><text x="100" y="104" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-            </g>
-            <circle cx="138" cy="155" r="12" fill="#E8A040"/><text x="138" y="158" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
-            <circle cx="148" cy="200" r="12" fill="#E8A040" opacity="0.9"/><text x="148" y="203" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
-            <circle cx="134" cy="235" r="12" fill="#E8A040" opacity="0.75"/><text x="134" y="238" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
-            <line x1="116" y1="155" x2="125" y2="155" stroke="#C97D4A" stroke-width="2"/>
-            <polygon points="128,155 122,151 122,159" fill="#C97D4A"/>
-            <text x="100" y="160" text-anchor="middle" fill="#222" font-weight="800" font-size="14">Zn</text>
-            <text x="78" y="172" text-anchor="end" fill="#C97D4A" font-size="10.5" font-weight="700">亜鉛が</text>
-            <text x="78" y="186" text-anchor="end" fill="#C97D4A" font-size="10.5" font-weight="700">とける</text>
-            <line x1="80" y1="180" x2="85" y2="180" stroke="#C97D4A" stroke-width="2"/>
-            <polygon points="88,180 82,177 82,183" fill="#C97D4A"/>
-            <text x="100" y="297" text-anchor="middle" fill="#6a5a40" font-size="10" font-weight="600">硫酸亜鉛 ZnSO₄ 水溶液</text>
-          </svg>
-          <div class="textbook-body">
-            <p>亜鉛(Zn)板の表面で、亜鉛原子が電子を2個失って亜鉛イオン(Zn²⁺)となり、硫酸亜鉛水溶液中にとけ出る。残された電子は、導線を通って+極へ移動する。電流が流れると、硫酸亜鉛水溶液の濃度はしだいに大きくなっていく。</p>
-          </div>
-          <div class="panel-rx">Zn → Zn²⁺ + 2e⁻</div>
-          <details class="sub-detail">
-            <summary>もっと詳しく</summary>
-            <div class="detail-body">
-              <p>この反応を <strong>酸化反応</strong>（電子を失う反応）という。</p>
-              <p>金属のイオンへのなりやすさを <strong>イオン化傾向</strong> という。Zn ＞ Cu なので亜鉛のほうがイオンになりやすく、亜鉛が溶けて銅が残る。</p>
-              <p>ボルタ電池では(-)極の表面に水素気泡がたまって電圧が下がる（分極）が、ダニエル電池では <strong>気体が発生しない</strong> ので電圧が安定する。</p>
-              <div class="key-point">📍 テスト頻出：「(-)極で何が起きる？」→ 亜鉛が溶けて Zn²⁺ になり、電子を残す。</div>
-              <p>📖 教科書 p.58</p>
-            </div>
-          </details>
+  <div class="explainer-toggles">
+    <button class="explainer-toggle-btn minus" id="toggle-minus">🔋 (-)極（亜鉛側）の説明</button>
+    <button class="explainer-toggle-btn plus" id="toggle-plus">🔋 (+)極（銅側）の説明</button>
+  </div>
+
+  <div class="stage">
+    <div id="canvas-host"></div>
+
+    <div class="overlay-explainer minus" id="overlay-minus">
+      <button class="close-btn" data-overlay="minus" aria-label="閉じる">×</button>
+      <h3>🔋 (-)極（亜鉛側）</h3>
+      <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" class="textbook-svg" aria-label="(-)極の反応の図解">
+        <text x="100" y="14" text-anchor="middle" fill="#4A7BAA" font-size="11" font-weight="700">電子が銅板へ向かって移動する</text>
+        <line x1="100" y1="22" x2="100" y2="38" stroke="#4A7BAA" stroke-width="2.5"/>
+        <polygon points="100,20 95,30 105,30" fill="#4A7BAA"/>
+        <path d="M 22 95 L 22 270 Q 22 282 34 282 L 166 282 Q 178 282 178 270 L 178 95 Z" fill="#E0EEF2" stroke="#6a6a6a" stroke-width="1.8"/>
+        <rect x="24" y="97" width="152" height="28" fill="#FAFAF0"/>
+        <line x1="24" y1="125" x2="176" y2="125" stroke="#a0b0bc" stroke-width="1" stroke-dasharray="2,2"/>
+        <rect x="86" y="40" width="28" height="220" fill="#9CA0A4" stroke="#5a5a5a" stroke-width="1.2"/>
+        <text x="100" y="160" text-anchor="middle" fill="#222" font-weight="800" font-size="14">Zn</text>
+        <g>
+          <circle cx="100" cy="60" r="6.5" fill="#4A7BAA"/><text x="100" y="64" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+          <circle cx="100" cy="80" r="6.5" fill="#4A7BAA"/><text x="100" y="84" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+          <circle cx="100" cy="100" r="6.5" fill="#4A7BAA"/><text x="100" y="104" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+        </g>
+        <circle cx="138" cy="155" r="12" fill="#E8A040"/><text x="138" y="158" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
+        <circle cx="148" cy="200" r="12" fill="#E8A040" opacity="0.9"/><text x="148" y="203" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
+        <circle cx="134" cy="235" r="12" fill="#E8A040" opacity="0.75"/><text x="134" y="238" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Zn²⁺</text>
+        <line x1="116" y1="155" x2="125" y2="155" stroke="#C97D4A" stroke-width="2"/>
+        <polygon points="128,155 122,151 122,159" fill="#C97D4A"/>
+        <text x="78" y="172" text-anchor="end" fill="#C97D4A" font-size="10.5" font-weight="700">亜鉛が</text>
+        <text x="78" y="186" text-anchor="end" fill="#C97D4A" font-size="10.5" font-weight="700">とける</text>
+        <line x1="80" y1="180" x2="85" y2="180" stroke="#C97D4A" stroke-width="2"/>
+        <polygon points="88,180 82,177 82,183" fill="#C97D4A"/>
+        <text x="100" y="297" text-anchor="middle" fill="#6a5a40" font-size="10" font-weight="600">硫酸亜鉛 ZnSO₄ 水溶液</text>
+      </svg>
+      <div class="textbook-body">
+        <p>亜鉛(Zn)板の表面で、亜鉛原子が電子を2個失って亜鉛イオン(Zn²⁺)となり、硫酸亜鉛水溶液中にとけ出る。残された電子は、導線を通って+極へ移動する。電流が流れると、硫酸亜鉛水溶液の濃度はしだいに大きくなっていく。</p>
+      </div>
+      <div class="panel-rx">Zn → Zn²⁺ + 2e⁻</div>
+      <details class="sub-detail">
+        <summary>もっと詳しく</summary>
+        <div class="detail-body">
+          <p>この反応を <strong>酸化反応</strong>（電子を失う反応）という。</p>
+          <p>金属のイオンへのなりやすさを <strong>イオン化傾向</strong> という。Zn ＞ Cu なので亜鉛のほうがイオンになりやすく、亜鉛が溶けて銅が残る。</p>
+          <p>ボルタ電池では(-)極の表面に水素気泡がたまって電圧が下がる（分極）が、ダニエル電池では <strong>気体が発生しない</strong> ので電圧が安定する。</p>
+          <div class="key-point">📍 テスト頻出：「(-)極で何が起きる？」→ 亜鉛が溶けて Zn²⁺ になり、電子を残す。</div>
+          <p>📖 教科書 p.58</p>
         </div>
       </details>
-    </aside>
-
-    <div class="stage">
-      <div id="canvas-host"></div>
     </div>
 
-    <aside class="side-panel plus">
-      <details>
-        <summary>🔋 (+)極（銅側）</summary>
-        <div class="panel-content">
-          <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" class="textbook-svg" aria-label="(+)極の反応の図解">
-            <text x="100" y="14" text-anchor="middle" fill="#4A7BAA" font-size="11" font-weight="700">導線から電子が送られてくる</text>
-            <line x1="100" y1="22" x2="100" y2="38" stroke="#4A7BAA" stroke-width="2.5"/>
-            <polygon points="100,40 95,30 105,30" fill="#4A7BAA"/>
-            <path d="M 22 95 L 22 270 Q 22 282 34 282 L 166 282 Q 178 282 178 270 L 178 95 Z" fill="#BBDDF0" stroke="#6a6a6a" stroke-width="1.8"/>
-            <rect x="24" y="97" width="152" height="28" fill="#FAFAF0"/>
-            <line x1="24" y1="125" x2="176" y2="125" stroke="#a0b0bc" stroke-width="1" stroke-dasharray="2,2"/>
-            <rect x="86" y="40" width="28" height="220" fill="#C97D4A" stroke="#7a4520" stroke-width="1.2"/>
-            <text x="100" y="160" text-anchor="middle" fill="#fff" font-weight="800" font-size="14">Cu</text>
-            <g>
-              <circle cx="100" cy="60" r="6.5" fill="#4A7BAA"/><text x="100" y="64" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-              <circle cx="100" cy="80" r="6.5" fill="#4A7BAA"/><text x="100" y="84" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-              <circle cx="100" cy="100" r="6.5" fill="#4A7BAA"/><text x="100" y="104" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
-            </g>
-            <circle cx="62" cy="155" r="12" fill="#6FB0DA" opacity="0.55"/><text x="62" y="158" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
-            <circle cx="52" cy="200" r="12" fill="#6FB0DA" opacity="0.7"/><text x="52" y="203" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
-            <circle cx="66" cy="235" r="12" fill="#6FB0DA" opacity="0.85"/><text x="66" y="238" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
-            <line x1="75" y1="155" x2="84" y2="155" stroke="#1f6ea0" stroke-width="2"/>
-            <polygon points="87,155 81,151 81,159" fill="#1f6ea0"/>
-            <text x="160" y="172" text-anchor="start" fill="#1f6ea0" font-size="10.5" font-weight="700">銅が</text>
-            <text x="160" y="186" text-anchor="start" fill="#1f6ea0" font-size="10.5" font-weight="700">付着する</text>
-            <line x1="158" y1="180" x2="153" y2="180" stroke="#1f6ea0" stroke-width="2"/>
-            <polygon points="150,180 156,177 156,183" fill="#1f6ea0"/>
-            <text x="100" y="297" text-anchor="middle" fill="#6a5a40" font-size="10" font-weight="600">硫酸銅 CuSO₄ 水溶液</text>
-          </svg>
-          <div class="textbook-body">
-            <p>銅(Cu)板の表面で、硫酸銅水溶液中の銅イオン(Cu²⁺)が、導線を通って送られてきた電子を2個受け取って銅原子となり、銅板に付着する。電流が流れると、硫酸銅水溶液中の Cu²⁺ が減るため、青色がしだいにうすくなっていく。</p>
-          </div>
-          <div class="panel-rx">Cu²⁺ + 2e⁻ → Cu</div>
-          <details class="sub-detail">
-            <summary>もっと詳しく</summary>
-            <div class="detail-body">
-              <p>この反応を <strong>還元反応</strong>（電子を受け取る反応）という。(-)極の酸化と(+)極の還元が同時に起きて、はじめて電池として働く。</p>
-              <p>水溶液中の Cu²⁺ が減るにつれて <strong>青色がうすくなる</strong> 変化が目で見て分かる。これがダニエル電池の特徴的な観察ポイント。</p>
-              <p>銅板の表面には新しい銅が析出するため、放電が進むほど <strong>銅板は厚くなる</strong>。</p>
-              <div class="key-point">📍 テスト頻出：「(+)極で何が起きる？」→ 水溶液中の Cu²⁺ が電子を受け取って銅に変わる。</div>
-              <p>📖 教科書 p.59</p>
-            </div>
-          </details>
+    <div class="overlay-explainer plus" id="overlay-plus">
+      <button class="close-btn" data-overlay="plus" aria-label="閉じる">×</button>
+      <h3>🔋 (+)極（銅側）</h3>
+      <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" class="textbook-svg" aria-label="(+)極の反応の図解">
+        <text x="100" y="14" text-anchor="middle" fill="#4A7BAA" font-size="11" font-weight="700">導線から電子が送られてくる</text>
+        <line x1="100" y1="22" x2="100" y2="38" stroke="#4A7BAA" stroke-width="2.5"/>
+        <polygon points="100,40 95,30 105,30" fill="#4A7BAA"/>
+        <path d="M 22 95 L 22 270 Q 22 282 34 282 L 166 282 Q 178 282 178 270 L 178 95 Z" fill="#BBDDF0" stroke="#6a6a6a" stroke-width="1.8"/>
+        <rect x="24" y="97" width="152" height="28" fill="#FAFAF0"/>
+        <line x1="24" y1="125" x2="176" y2="125" stroke="#a0b0bc" stroke-width="1" stroke-dasharray="2,2"/>
+        <rect x="86" y="40" width="28" height="220" fill="#C97D4A" stroke="#7a4520" stroke-width="1.2"/>
+        <text x="100" y="160" text-anchor="middle" fill="#fff" font-weight="800" font-size="14">Cu</text>
+        <g>
+          <circle cx="100" cy="60" r="6.5" fill="#4A7BAA"/><text x="100" y="64" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+          <circle cx="100" cy="80" r="6.5" fill="#4A7BAA"/><text x="100" y="84" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+          <circle cx="100" cy="100" r="6.5" fill="#4A7BAA"/><text x="100" y="104" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">−</text>
+        </g>
+        <circle cx="62" cy="155" r="12" fill="#6FB0DA" opacity="0.55"/><text x="62" y="158" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
+        <circle cx="52" cy="200" r="12" fill="#6FB0DA" opacity="0.7"/><text x="52" y="203" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
+        <circle cx="66" cy="235" r="12" fill="#6FB0DA" opacity="0.85"/><text x="66" y="238" text-anchor="middle" fill="#fff" font-size="9" font-weight="800">Cu²⁺</text>
+        <line x1="75" y1="155" x2="84" y2="155" stroke="#1f6ea0" stroke-width="2"/>
+        <polygon points="87,155 81,151 81,159" fill="#1f6ea0"/>
+        <text x="160" y="172" text-anchor="start" fill="#1f6ea0" font-size="10.5" font-weight="700">銅が</text>
+        <text x="160" y="186" text-anchor="start" fill="#1f6ea0" font-size="10.5" font-weight="700">付着する</text>
+        <line x1="158" y1="180" x2="153" y2="180" stroke="#1f6ea0" stroke-width="2"/>
+        <polygon points="150,180 156,177 156,183" fill="#1f6ea0"/>
+        <text x="100" y="297" text-anchor="middle" fill="#6a5a40" font-size="10" font-weight="600">硫酸銅 CuSO₄ 水溶液</text>
+      </svg>
+      <div class="textbook-body">
+        <p>銅(Cu)板の表面で、硫酸銅水溶液中の銅イオン(Cu²⁺)が、導線を通って送られてきた電子を2個受け取って銅原子となり、銅板に付着する。電流が流れると、硫酸銅水溶液中の Cu²⁺ が減るため、青色がしだいにうすくなっていく。</p>
+      </div>
+      <div class="panel-rx">Cu²⁺ + 2e⁻ → Cu</div>
+      <details class="sub-detail">
+        <summary>もっと詳しく</summary>
+        <div class="detail-body">
+          <p>この反応を <strong>還元反応</strong>（電子を受け取る反応）という。(-)極の酸化と(+)極の還元が同時に起きて、はじめて電池として働く。</p>
+          <p>水溶液中の Cu²⁺ が減るにつれて <strong>青色がうすくなる</strong> 変化が目で見て分かる。これがダニエル電池の特徴的な観察ポイント。</p>
+          <p>銅板の表面には新しい銅が析出するため、放電が進むほど <strong>銅板は厚くなる</strong>。</p>
+          <div class="key-point">📍 テスト頻出：「(+)極で何が起きる？」→ 水溶液中の Cu²⁺ が電子を受け取って銅に変わる。</div>
+          <p>📖 教科書 p.59</p>
         </div>
       </details>
-    </aside>
+    </div>
   </div>
 
   <div class="controls">
@@ -842,23 +898,23 @@ let electronPathNorm = [];
 // pre-built path segments + cumulative length
 let electronSegs = [];
 let electronTotalLen = 0;
-const N_ELECTRONS = 24;
+const N_ELECTRONS = 18;
 let electronPos = []; // distance along path [0..totalLen]
 
 // Zn²⁺ particles (left beaker, emerging from Zn electrode going right/down)
-const ZN2_PARTICLES = 10;
+const ZN2_PARTICLES = 6;
 let zn2 = [];
 
 // Cu²⁺ particles (right beaker, moving toward Cu electrode)
-const CU2_PARTICLES = 10;
+const CU2_PARTICLES = 6;
 let cu2 = [];
 
-// Cellophane ion crossing (SO₄²⁻ etc. — we just show small dots crossing)
-const CELLO_PARTICLES = 6;
+// Cellophane ion crossing — Zn²⁺ (上) と SO₄²⁻ (下) で各2個
+const CELLO_PARTICLES = 4;
 let celloIons = [];
 
 // Electrons emerging from the Zn electrode (the "left behind" electrons)
-const ZN_EMIT_PARTICLES = 6;
+const ZN_EMIT_PARTICLES = 4;
 let znEmit = [];
 
 function buildElectronPath() {
@@ -933,8 +989,8 @@ function makeCelloIon(t) {
   const isCation = (t < 0.5);
   // Zn²⁺ は上半分、SO₄²⁻ は下半分に明確に分けて重なりを避ける
   const yPos = isCation
-    ? 0.15 + (t / 0.5) * 0.25         // Zn²⁺ は 0.15..0.40 (上)
-    : 0.58 + ((t - 0.5) / 0.5) * 0.28; // SO₄²⁻ は 0.58..0.86 (下)
+    ? 0.18 + (t / 0.5) * 0.20         // Zn²⁺ は 0.18..0.38 (上)
+    : 0.62 + ((t - 0.5) / 0.5) * 0.22; // SO₄²⁻ は 0.62..0.84 (下)
   return {
     t: t,
     type: isCation ? 'Zn²⁺' : 'SO₄²⁻',
@@ -1544,6 +1600,34 @@ document.getElementById('prev-step').addEventListener('click', () => {
 });
 document.getElementById('next-step').addEventListener('click', () => {
   if (stepIndex < STEPS.length - 1) { stepIndex++; applyStepFlags(); }
+});
+
+// Electrode explainer overlays
+function toggleOverlay(which) {
+  const other = which === 'minus' ? 'plus' : 'minus';
+  const overlay = document.getElementById('overlay-' + which);
+  const btn = document.getElementById('toggle-' + which);
+  const otherOverlay = document.getElementById('overlay-' + other);
+  const otherBtn = document.getElementById('toggle-' + other);
+  const isOpen = overlay.classList.contains('show');
+  // close both first
+  overlay.classList.remove('show');
+  otherOverlay.classList.remove('show');
+  btn.classList.remove('active');
+  otherBtn.classList.remove('active');
+  if (!isOpen) {
+    overlay.classList.add('show');
+    btn.classList.add('active');
+  }
+}
+document.getElementById('toggle-minus').addEventListener('click', () => toggleOverlay('minus'));
+document.getElementById('toggle-plus').addEventListener('click', () => toggleOverlay('plus'));
+document.querySelectorAll('.overlay-explainer .close-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const which = btn.getAttribute('data-overlay');
+    toggleOverlay(which);
+  });
 });
 
 // Observation checklist: click to toggle highlight; checkbox = "observed" mark

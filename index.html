@@ -843,6 +843,11 @@ function drawBeakerLabels(L) {
   fill(80, 70, 50);
   text('硫酸亜鉛 ZnSO₄ 水溶液', L.leftBeakerX + L.leftBeakerW / 2, L.beakerY + L.beakerH + 22);
   text('硫酸銅 CuSO₄ 水溶液', L.rightBeakerX + L.rightBeakerW / 2, L.beakerY + L.beakerH + 22);
+  // ZnSO₄ は実際は無色透明だが、見やすさのため淡水色で表示している旨を注記
+  textSize(Math.max(9, canvasW / 115));
+  textStyle(NORMAL);
+  fill(140, 120, 90);
+  text('※本来は無色透明（見やすさのため色をつけています）', L.leftBeakerX + L.leftBeakerW / 2, L.beakerY + L.beakerH + 40);
 }
 
 function drawLabels(L) {

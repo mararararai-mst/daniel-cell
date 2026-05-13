@@ -39,9 +39,110 @@ html, body {
   min-height: 100vh;
 }
 .wrap {
-  max-width: 1080px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 16px 20px 40px;
+}
+.main-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 260px;
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .main-layout { grid-template-columns: 1fr; }
+}
+.side-panel {
+  background: var(--paper);
+  border: 2px solid #EADFC4;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+  color: #4a4035;
+  position: sticky;
+  top: 12px;
+}
+.side-panel.minus { border-left: 5px solid #4A7BAA; }
+.side-panel.plus { border-left: 5px solid #D97A4B; }
+.side-panel h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.side-panel.minus h3 { color: #4A7BAA; }
+.side-panel.plus h3 { color: #D97A4B; }
+.side-panel .mini-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px;
+  background: #FFFBF0;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.side-panel .mini-diagram .e-arrow { color: #4A7BAA; font-weight: 800; }
+.side-panel .mini-diagram .rod {
+  width: 30px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+}
+.side-panel .mini-diagram .rod.zn { background: #B0B4B8; color: #333; }
+.side-panel .mini-diagram .rod.cu { background: #C97D4A; }
+.side-panel .mini-diagram .ion-flow { font-weight: 800; }
+.side-panel.minus .mini-diagram .ion-flow { color: #C97D4A; }
+.side-panel.plus .mini-diagram .ion-flow { color: #4A7BAA; }
+.side-panel .mini-diagram .liq { color: #8a7a60; font-size: 10px; }
+.side-panel ol { margin: 6px 0 6px 18px; padding: 0; line-height: 1.65; }
+.side-panel ol li { margin: 3px 0; }
+.side-panel .panel-rx {
+  background: #FFFBF0;
+  border-left: 3px solid;
+  padding: 6px 10px;
+  margin: 8px 0;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 13px;
+}
+.side-panel.minus .panel-rx { border-color: #4A7BAA; }
+.side-panel.plus .panel-rx { border-color: #D97A4B; }
+.side-panel details {
+  margin-top: 8px;
+  border-top: 1px dashed #d0c0a0;
+  padding-top: 6px;
+}
+.side-panel details summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  color: #8a6a40;
+  user-select: none;
+  list-style: none;
+}
+.side-panel details summary::-webkit-details-marker { display: none; }
+.side-panel details summary::before { content: '▶ '; font-size: 10px; transition: transform 0.2s; display: inline-block; }
+.side-panel details[open] summary::before { content: '▼ '; }
+.side-panel details .detail-body {
+  padding: 6px 0 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.side-panel details .detail-body p { margin: 4px 0; }
+.side-panel details .detail-body strong { color: #6a4a20; }
+.side-panel details .detail-body .key-point {
+  background: #FFEBD0;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 4px 0;
+  font-size: 11px;
 }
 header.title {
   display: flex;
@@ -452,8 +553,64 @@ sub, sup { font-size: 0.7em; }
     <span class="sub">中3 理科 ／ 単元1-3 化学変化と電池</span>
   </header>
 
-  <div class="stage">
-    <div id="canvas-host"></div>
+  <div class="main-layout">
+    <aside class="side-panel minus">
+      <h3>🔋 (-)極（亜鉛側）</h3>
+      <div class="mini-diagram">
+        <div class="e-arrow">↑ e⁻ 導線へ</div>
+        <div class="rod zn">Zn</div>
+        <div class="ion-flow">Zn²⁺ → 水溶液へ</div>
+        <div class="liq">ZnSO₄ 水溶液</div>
+      </div>
+      <ol>
+        <li>亜鉛(Zn)原子が<strong>電子を2つ手放す</strong></li>
+        <li>電子は<strong>導線を通って (+)極へ</strong>（電流の正体）</li>
+        <li>亜鉛は <strong>Zn²⁺ になって水溶液へ</strong></li>
+        <li><strong>亜鉛板はやせ細る</strong>／気体は出ない</li>
+      </ol>
+      <div class="panel-rx">Zn → Zn²⁺ + 2e⁻</div>
+      <details>
+        <summary>もっと詳しく</summary>
+        <div class="detail-body">
+          <p>これは <strong>酸化反応</strong>（電子を失う反応）です。</p>
+          <p><strong>イオン化傾向</strong> は Zn ＞ Cu。亜鉛のほうがイオンになりやすいので、亜鉛が溶けて銅が残ります。もしマグネシウムを使ったらマグネシウムが溶ける側になります。</p>
+          <p>ボルタ電池では(-)極の表面に水素気泡がたまって電圧が下がります（分極）が、ダニエル電池では <strong>水素が発生しない</strong> ので電圧が安定します。</p>
+          <div class="key-point">📍 テストで聞かれる：「(-)極で何が起きる？」→ 亜鉛が溶けて Zn²⁺ になり、電子を残す。</div>
+          <p>📖 教科書 p.58「-極での反応」</p>
+        </div>
+      </details>
+    </aside>
+
+    <div class="stage">
+      <div id="canvas-host"></div>
+    </div>
+
+    <aside class="side-panel plus">
+      <h3>🔋 (+)極（銅側）</h3>
+      <div class="mini-diagram">
+        <div class="e-arrow">↓ e⁻ 導線から</div>
+        <div class="rod cu">Cu</div>
+        <div class="ion-flow">Cu²⁺ ← 水溶液から</div>
+        <div class="liq">CuSO₄ 水溶液</div>
+      </div>
+      <ol>
+        <li>導線を通って<strong>電子が送られてくる</strong></li>
+        <li>水溶液中の <strong>Cu²⁺ が電子を2つ受け取る</strong></li>
+        <li>Cu²⁺ は <strong>銅となって銅板に付着</strong></li>
+        <li><strong>銅板は厚くなる</strong>／青色がうすくなる</li>
+      </ol>
+      <div class="panel-rx">Cu²⁺ + 2e⁻ → Cu</div>
+      <details>
+        <summary>もっと詳しく</summary>
+        <div class="detail-body">
+          <p>これは <strong>還元反応</strong>（電子を受け取る反応）です。(-)極の酸化と(+)極の還元が同時に起きて、はじめて電池になります。</p>
+          <p>水溶液中の Cu²⁺ がだんだん減るので、<strong>青色がうすくなる</strong>のが目で見て分かります。これがダニエル電池の特徴的な変化。</p>
+          <p>銅板の表面には <strong>新しい銅</strong> が析出して、放電が進むほど銅板が太くなります。</p>
+          <div class="key-point">📍 テストで聞かれる：「(+)極で何が起きる？」→ 水溶液中の Cu²⁺ が電子を受け取って銅に変わる。</div>
+          <p>📖 教科書 p.59「+極での反応」</p>
+        </div>
+      </details>
+    </aside>
   </div>
 
   <div class="controls">
@@ -520,54 +677,6 @@ sub, sup { font-size: 0.7em; }
   <p class="notes">
     電圧は約1.1V（教科書値）。セロハンで2つの水溶液を仕切り、それぞれの金属を導線でつなぐと電池になります。
   </p>
-
-  <div class="electrode-pair">
-    <details class="explainer">
-      <summary>💡 (-)極（亜鉛側）では何が起きてる？</summary>
-      <div class="explainer-body">
-        <div class="electrode-explain minus">
-          <div class="diagram">
-            <div class="e-up">↑ e⁻ 導線へ</div>
-            <div class="rod-shape zinc">Zn</div>
-            <div class="ion-out">Zn²⁺ → 水溶液へ</div>
-            <div class="liquid-label">ZnSO₄ 水溶液</div>
-          </div>
-          <div class="steps">
-            <ol>
-              <li>亜鉛(Zn)の原子が、<strong>電子を2つ手放す</strong></li>
-              <li>その電子は <strong>導線を通って</strong>(+)銅板に向かう（これが電流の正体）</li>
-              <li>亜鉛は <strong>Zn²⁺ になって水溶液中にとけ出る</strong> → 亜鉛板はやせ細る</li>
-              <li><strong>気体は発生しない</strong>（ここがボルタ電池との大きな違い）</li>
-            </ol>
-            <div class="rx-box">反応式：<strong>Zn → Zn²⁺ + 2e⁻</strong></div>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <details class="explainer">
-      <summary>💡 (+)極（銅側）では何が起きてる？</summary>
-      <div class="explainer-body">
-        <div class="electrode-explain plus">
-          <div class="diagram">
-            <div class="e-up">↓ e⁻ 導線から</div>
-            <div class="rod-shape copper">Cu</div>
-            <div class="ion-in">Cu²⁺ ← 水溶液から</div>
-            <div class="liquid-label">CuSO₄ 水溶液</div>
-          </div>
-          <div class="steps">
-            <ol>
-              <li>導線を通って <strong>電子が送られてくる</strong></li>
-              <li>水溶液中の <strong>銅イオン(Cu²⁺)が電子を2つ受け取る</strong></li>
-              <li>Cu²⁺ は <strong>銅となって銅板に付着する</strong> → 銅板が厚くなる</li>
-              <li>水溶液の Cu²⁺ が減るので <strong>青色がうすくなっていく</strong></li>
-            </ol>
-            <div class="rx-box">反応式：<strong>Cu²⁺ + 2e⁻ → Cu</strong></div>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
 
   <details class="explainer">
     <summary>💡 セロハンを通るイオンは何のため？（発展）</summary>

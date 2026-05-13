@@ -853,7 +853,15 @@ function drawElectrode(x, L, kind, label, sign) {
   // electrode is a vertical rod inserted into the liquid
   const top = L.electrodeTopY;
   const bot = L.liquidBottomY - 8;
-  const w = L.electrodeW;
+  // 残量(chargeLevel)に応じて電極の太さが変化:
+  //   Zn(-): 亜鉛が溶け出してやせ細る (1.0 → 0.55)
+  //   Cu(+): 銅が析出して厚くなる (1.0 → 1.45)
+  let w;
+  if (kind === 'zinc') {
+    w = L.electrodeW * (0.55 + chargeLevel * 0.45);
+  } else {
+    w = L.electrodeW * (1.0 + (1 - chargeLevel) * 0.45);
+  }
   noStroke();
   if (kind === 'zinc') fill(176, 180, 184); else fill(201, 125, 74);
   rect(x - w / 2, top, w, bot - top, 4);

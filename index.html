@@ -559,9 +559,16 @@ function makeCu2(t) {
   };
 }
 function makeCelloIon(t) {
-  // alternate direction: even index goes right (Zn²⁺ migrate to cathode side conceptually),
-  // odd goes left. We label as generic "ion" since textbook is vague.
-  return { t: t, dir: (Math.random() < 0.5 ? 1 : -1) };
+  // 電気的中性を保つためのイオン移動:
+  //   Zn²⁺ が ZnSO₄(左) → CuSO₄(右) 側へ少し
+  //   SO₄²⁻ が CuSO₄(右) → ZnSO₄(左) 側へ
+  const isCation = (t < 0.5);
+  return {
+    t: t,
+    type: isCation ? 'Zn²⁺' : 'SO₄²⁻',
+    dir: isCation ? 1 : -1,
+    color: isCation ? '#E8A040' : '#5FA878',
+  };
 }
 
 // ===== Canvas setup =====
@@ -689,11 +696,11 @@ function draw() {
       drawCu2(p, L);
     }
   }
-  // Cellophane ion crossings (direction-aware)
+  // Cellophane ion crossings (Zn²⁺ rightward, SO₄²⁻ leftward — fixed direction)
   if (activeFlags.cellophane) {
     for (let p of celloIons) {
       p.t += 0.004 * dt;
-      if (p.t > 1) { p.t = 0; p.dir = (Math.random() < 0.5 ? 1 : -1) * direction; }
+      if (p.t > 1) p.t = 0;
       drawCelloIon(p, L);
     }
   }
@@ -934,16 +941,28 @@ function drawZnEmit(p, L) {
 }
 
 function drawCelloIon(p, L) {
-  // small generic ion crossing through cellophane region
+  // labeled ion crossing through cellophane region
   const baseY = lerp(L.liquidTopY + 20, L.liquidBottomY - 20, ((p.t * 1.5 + 0.2) % 1));
   const cx = L.cellophaneX + L.cellophaneW / 2;
-  const startX = p.dir > 0 ? cx - canvasW * 0.04 : cx + canvasW * 0.04;
-  const endX = p.dir > 0 ? cx + canvasW * 0.04 : cx - canvasW * 0.04;
+  const startX = p.dir > 0 ? cx - canvasW * 0.05 : cx + canvasW * 0.05;
+  const endX = p.dir > 0 ? cx + canvasW * 0.05 : cx - canvasW * 0.05;
   const x = lerp(startX, endX, p.t);
-  const alpha = (p.t < 0.15 ? p.t / 0.15 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 200;
+  const alpha = (p.t < 0.15 ? p.t / 0.15 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 240;
   noStroke();
-  fill(180, 140, 90, alpha);
-  ellipse(x, baseY, canvasW * 0.010, canvasW * 0.010);
+  const c = color(p.color);
+  c.setAlpha(alpha);
+  fill(c);
+  // SO₄²⁻ は文字数が多いので楕円(横長)に。Zn²⁺ は通常の丸
+  if (p.type === 'SO₄²⁻') {
+    ellipse(x, baseY, canvasW * 0.045, canvasW * 0.024);
+  } else {
+    ellipse(x, baseY, canvasW * 0.024, canvasW * 0.024);
+  }
+  fill(255, alpha);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(Math.max(9, canvasW / (p.type === 'SO₄²⁻' ? 115 : 100)));
+  text(p.type, x, baseY);
 }
 
 function drawIon(x, y, label, colorHex, alpha) {

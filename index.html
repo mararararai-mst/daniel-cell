@@ -883,9 +883,10 @@ const LAYOUT = {
   beakerY: 0.40, // top of beakers
   beakerH: 0.45, // height of beakers
   liquidTopOffset: 0.06, // liquid top inside beaker
-  leftBeakerX: 0.08, leftBeakerW: 0.32,
-  rightBeakerX: 0.60, rightBeakerW: 0.32,
-  cellophaneX: 0.495, cellophaneW: 0.010,
+  // 1つの大きい容器をセロハンで真ん中で仕切る教科書通りの構造
+  leftBeakerX: 0.08, leftBeakerW: 0.42,
+  rightBeakerX: 0.50, rightBeakerW: 0.42,
+  cellophaneX: 0.500, cellophaneW: 0.008,
   electrodeW: 0.025, electrodeH: 0.30,
   electrodeTopY: 0.33, // top of electrode rod above liquid
   // Wire path
@@ -1052,9 +1053,10 @@ function draw() {
 
   const L = pixelLayout();
 
-  // Draw beakers (back)
+  // Draw combined beaker (1つの容器の左右に2種類の水溶液) — 枠は最後に外側で描く
   drawBeaker(L.leftBeakerX, L.beakerY, L.leftBeakerW, L.beakerH, 'znso4');
   drawBeaker(L.rightBeakerX, L.beakerY, L.rightBeakerW, L.beakerH, 'cuso4');
+  drawCombinedBeakerFrame(L);
 
   // Cellophane (between beakers, sits over the gap)
   drawCellophane(L);
@@ -1199,25 +1201,35 @@ function drawHighlight(L) {
 
 // ===== Drawing helpers =====
 function drawBeaker(x, y, w, h, liquid) {
-  // glass beaker outline
-  noFill();
-  stroke(140, 130, 110, 200);
-  strokeWeight(3);
-  rect(x, y, w, h, 4, 4, 14, 14);
-  // liquid color
+  // 1つの大きい容器の中の左右半分を別の水溶液で塗り分ける
+  // 枠線は drawCombinedBeakerFrame で一括描画するためここでは描かない
   noStroke();
   if (liquid === 'znso4') {
-    // ZnSO₄ は無色（Zn²⁺は可視光を吸収しないため色がつかない）。
-    // 水が入っているのがはっきり分かる程度の薄水色（水のイメージ色）。
     fill(225, 238, 246, 220);
   } else {
-    // CuSO₄: at full = 濃い青, at empty = ほぼ無色（教科書: 色がうすくなっていく）
     const r = lerp(220, 95, chargeLevel);
     const g = lerp(232, 168, chargeLevel);
     const b = lerp(240, 216, chargeLevel);
     fill(r, g, b, 200);
   }
-  rect(x + 4, y + (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)), w - 8, h - (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)) - 6, 0, 0, 12, 12);
+  // 液体の角丸: 外側だけ丸める（容器の左半分なら左下、右半分なら右下）
+  const liquidTop = y + (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y));
+  const liquidH = h - (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)) - 6;
+  if (liquid === 'znso4') {
+    rect(x + 4, liquidTop, w - 4, liquidH, 0, 0, 0, 12);
+  } else {
+    rect(x, liquidTop, w - 4, liquidH, 0, 0, 12, 0);
+  }
+}
+
+function drawCombinedBeakerFrame(L) {
+  // 統合ビーカー(外枠) — 2つの槽を1つの容器でまとめて描く
+  noFill();
+  stroke(140, 130, 110, 200);
+  strokeWeight(3);
+  const x = L.leftBeakerX;
+  const w = (L.rightBeakerX + L.rightBeakerW) - L.leftBeakerX;
+  rect(x, L.beakerY, w, L.beakerH, 4, 4, 14, 14);
 }
 
 function drawCellophane(L) {
@@ -1390,13 +1402,13 @@ function drawBeakerLabels(L) {
   textSize(Math.max(11, canvasW / 82));
   textStyle(BOLD);
   fill(80, 70, 50);
+  // 1つの容器を左右に分けて 2 槽。ラベルはそれぞれ中央の位置に
   text('硫酸亜鉛 ZnSO₄ 水溶液', L.leftBeakerX + L.leftBeakerW / 2, L.beakerY + L.beakerH + 22);
   text('硫酸銅 CuSO₄ 水溶液', L.rightBeakerX + L.rightBeakerW / 2, L.beakerY + L.beakerH + 22);
-  // ZnSO₄ は実際は無色透明だが、見やすさのため淡水色で表示している旨を注記
   textSize(Math.max(9, canvasW / 115));
   textStyle(NORMAL);
   fill(140, 120, 90);
-  text('※本来は無色透明（見やすさのため色をつけています）', L.leftBeakerX + L.leftBeakerW / 2, L.beakerY + L.beakerH + 40);
+  text('※ZnSO₄は本来は無色透明（見やすさのため色をつけています）', (L.leftBeakerX + L.rightBeakerX + L.rightBeakerW) / 2, L.beakerY + L.beakerH + 40);
 }
 
 function drawLabels(L) {

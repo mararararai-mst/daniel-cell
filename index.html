@@ -175,6 +175,62 @@ input[type="range"] {
   display: none;
 }
 .depleted-note.show { display: block; }
+.observation {
+  margin-top: 14px;
+  background: var(--paper);
+  border: 2px solid #EADFC4;
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+.observation h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #6a5a40;
+  letter-spacing: 0.04em;
+}
+.observation .hint {
+  font-size: 11px;
+  color: #9a8a70;
+  margin-left: 8px;
+  font-weight: 500;
+}
+.obs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 6px;
+}
+.obs-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #FFFBF0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5a4a30;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+.obs-item:hover { background: #FFF6E6; }
+.obs-item.active {
+  background: #FFE9B8;
+  border-color: var(--accent);
+  font-weight: 800;
+  color: #6a4a20;
+}
+.obs-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  margin: 0;
+  cursor: pointer;
+}
+.obs-item .obs-label { flex: 1; }
 .explainer {
   margin-top: 14px;
   background: #FFF6E6;
@@ -432,6 +488,18 @@ sub, sup { font-size: 0.7em; }
     🔋 <strong>電池が消耗しました。</strong>ダニエル電池は一次電池なので充電できません。<strong>水溶液や金属板を新しくする（電池そのものを取り替える）</strong>と、また使えるようになります → 「↻ 電池を新しくする」を押してみよう。
   </div>
 
+  <div class="observation">
+    <h3>✏️ 観察ポイント <span class="hint">クリックで該当箇所をハイライト／チェックで観察済み</span></h3>
+    <ul class="obs-list">
+      <li class="obs-item" data-target="wire"><input type="checkbox"><span class="obs-label">電子の向きを確認（導線）</span></li>
+      <li class="obs-item" data-target="zn"><input type="checkbox"><span class="obs-label">亜鉛板がやせ細る</span></li>
+      <li class="obs-item" data-target="cu"><input type="checkbox"><span class="obs-label">銅板が厚くなる</span></li>
+      <li class="obs-item" data-target="cuso4"><input type="checkbox"><span class="obs-label">CuSO₄ の青色がうすくなる</span></li>
+      <li class="obs-item" data-target="cellophane"><input type="checkbox"><span class="obs-label">セロハンをイオンが通る</span></li>
+      <li class="obs-item" data-target="voltmeter"><input type="checkbox"><span class="obs-label">電圧が約1.1V</span></li>
+    </ul>
+  </div>
+
   <div class="step-info" id="step-info">
     <span class="step-no" id="step-no">STEP 1</span>
     <span class="step-title" id="step-title">装置の構成</span>
@@ -561,6 +629,7 @@ let stepIndex = 0;
 // 教科書: 消耗したら水溶液や金属板を新しくする(電池そのものを取り替える)
 let chargeLevel = 1.0;
 const FULL_DISCHARGE_TICKS = 60 * 90; // ~90 seconds at 60fps speed×1
+let highlightTarget = null; // 'wire' | 'zn' | 'cu' | 'cuso4' | 'cellophane' | 'voltmeter'
 
 // Step definitions: which animations are active
 // flags: zn (Zn dissolution), e (electron flow), cu (Cu deposition), cellophane (ion through cellophane), labels (show labels)
@@ -855,6 +924,62 @@ function draw() {
   if (activeFlags.labels) {
     drawLabels(L);
   }
+
+  // Highlight overlay for observation checklist
+  drawHighlight(L);
+}
+
+function drawHighlight(L) {
+  if (!highlightTarget) return;
+  // pulsing animation
+  const pulse = (Math.sin(frameCount * 0.12) + 1) * 0.5; // 0..1
+  let x, y, w, h;
+  switch (highlightTarget) {
+    case 'wire':
+      x = L.wireZnTop.x - canvasW * 0.02;
+      y = L.voltMeterY - 8;
+      w = L.wireCuTop.x - L.wireZnTop.x + canvasW * 0.04;
+      h = (L.electrodeTopY - L.voltMeterY) + 16;
+      break;
+    case 'zn':
+      x = L.znElecX - L.electrodeW * 1.2;
+      y = L.electrodeTopY - 30;
+      w = L.electrodeW * 2.4;
+      h = (L.liquidBottomY - L.electrodeTopY) + 35;
+      break;
+    case 'cu':
+      x = L.cuElecX - L.electrodeW * 1.4;
+      y = L.electrodeTopY - 30;
+      w = L.electrodeW * 2.8;
+      h = (L.liquidBottomY - L.electrodeTopY) + 35;
+      break;
+    case 'cuso4':
+      x = L.rightBeakerX - 6;
+      y = L.beakerY - 6;
+      w = L.rightBeakerW + 12;
+      h = L.beakerH + 12;
+      break;
+    case 'cellophane':
+      x = L.cellophaneX - canvasW * 0.04;
+      y = L.beakerY - 20;
+      w = canvasW * 0.08;
+      h = L.beakerH + 30;
+      break;
+    case 'voltmeter':
+      x = L.voltMeterX - 8;
+      y = L.voltMeterY - 8;
+      w = L.voltMeterW + 16;
+      h = L.voltMeterH + 16;
+      break;
+  }
+  noFill();
+  stroke(217, 122, 75, 200 + pulse * 55);
+  strokeWeight(3 + pulse * 2);
+  rect(x, y, w, h, 10);
+  // soft yellow tint
+  noStroke();
+  fill(255, 215, 100, 30 + pulse * 30);
+  rect(x, y, w, h, 10);
 }
 
 // ===== Drawing helpers =====
@@ -907,14 +1032,62 @@ function drawWires(L) {
   stroke(60, 50, 40);
   strokeWeight(3);
   noFill();
-  // up segments
   line(L.znElecX, L.electrodeTopY, L.wireZnTop.x, L.electrodeTopY);
   line(L.wireZnTop.x, L.electrodeTopY, L.wireZnTop.x, L.wireZnTop.y);
-  // top horizontal to volt meter
   line(L.wireZnTop.x, L.wireZnTop.y, L.voltMeterX, L.wireZnTop.y);
   line(L.voltMeterX + L.voltMeterW, L.wireZnTop.y, L.wireCuTop.x, L.wireZnTop.y);
   line(L.wireCuTop.x, L.wireZnTop.y, L.wireCuTop.x, L.electrodeTopY);
   line(L.wireCuTop.x, L.electrodeTopY, L.cuElecX, L.electrodeTopY);
+
+  // Two-color direction arrows (visible only when current is flowing)
+  // 電子: (-)Zn → (+)Cu (青、左→右)
+  // 電流: (+)Cu → (-)Zn (赤、右→左)  ← テストで間違いやすい!
+  if (activeFlags.voltage) {
+    drawDirectionArrows(L);
+  }
+}
+
+function drawDirectionArrows(L) {
+  // arrows are placed on the left and right halves of the top wire
+  const leftMidX = (L.wireZnTop.x + L.voltMeterX) / 2;
+  const rightMidX = (L.voltMeterX + L.voltMeterW + L.wireCuTop.x) / 2;
+  const wireY = L.wireZnTop.y;
+  const offsetY = 18;
+  const arrowLen = canvasW * 0.05;
+
+  // 電流(I) — 赤、Cu→Zn 方向 (上側、wireの少し上に)
+  drawArrow(rightMidX + arrowLen / 2, wireY - offsetY, rightMidX - arrowLen / 2, wireY - offsetY, '#D9533C', 'I (電流)');
+  drawArrow(leftMidX + arrowLen / 2, wireY - offsetY, leftMidX - arrowLen / 2, wireY - offsetY, '#D9533C', null);
+
+  // 電子(e⁻) — 青、Zn→Cu 方向 (下側、wireのすぐ下に)
+  drawArrow(leftMidX - arrowLen / 2, wireY + offsetY, leftMidX + arrowLen / 2, wireY + offsetY, '#4A7BAA', 'e⁻ (電子)');
+  drawArrow(rightMidX - arrowLen / 2, wireY + offsetY, rightMidX + arrowLen / 2, wireY + offsetY, '#4A7BAA', null);
+}
+
+function drawArrow(x1, y1, x2, y2, colorHex, label) {
+  push();
+  stroke(colorHex);
+  strokeWeight(3);
+  noFill();
+  line(x1, y1, x2, y2);
+  // arrowhead
+  const ang = Math.atan2(y2 - y1, x2 - x1);
+  const ah = canvasW * 0.012;
+  fill(colorHex);
+  noStroke();
+  triangle(
+    x2, y2,
+    x2 - ah * Math.cos(ang - 0.4), y2 - ah * Math.sin(ang - 0.4),
+    x2 - ah * Math.cos(ang + 0.4), y2 - ah * Math.sin(ang + 0.4)
+  );
+  if (label) {
+    textAlign(CENTER, BOTTOM);
+    textSize(Math.max(10, canvasW / 100));
+    textStyle(BOLD);
+    fill(colorHex);
+    text(label, (x1 + x2) / 2, Math.min(y1, y2) - 4);
+  }
+  pop();
 }
 
 function drawVoltMeter(L) {
@@ -1213,6 +1386,24 @@ document.getElementById('prev-step').addEventListener('click', () => {
 });
 document.getElementById('next-step').addEventListener('click', () => {
   if (stepIndex < STEPS.length - 1) { stepIndex++; applyStepFlags(); }
+});
+
+// Observation checklist: click to toggle highlight; checkbox = "observed" mark
+document.querySelectorAll('.obs-item').forEach(item => {
+  const target = item.getAttribute('data-target');
+  item.addEventListener('click', (e) => {
+    // checkbox自身のクリックはチェックの開閉だけにしてハイライトはトグルしない
+    if (e.target.tagName === 'INPUT') return;
+    if (highlightTarget === target) {
+      highlightTarget = null;
+      item.classList.remove('active');
+    } else {
+      // clear previous active item
+      document.querySelectorAll('.obs-item.active').forEach(el => el.classList.remove('active'));
+      highlightTarget = target;
+      item.classList.add('active');
+    }
+  });
 });
 </script>
 </body>

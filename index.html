@@ -715,8 +715,8 @@ function drawBeaker(x, y, w, h, liquid) {
   noStroke();
   if (liquid === 'znso4') {
     // ZnSO₄ は無色（Zn²⁺は可視光を吸収しないため色がつかない）。
-    // 教科書では「濃度は少しずつ大きくなる」とあるが、色変化はしない。
-    fill(232, 241, 245, 220);
+    // ビーカーの中身を示す程度のごく薄い水色。
+    fill(248, 252, 253, 120);
   } else {
     // CuSO₄: at full = 濃い青, at empty = ほぼ無色（教科書: 色がうすくなっていく）
     const r = lerp(220, 95, chargeLevel);

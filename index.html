@@ -292,6 +292,22 @@ input[type="range"] {
 }
 .electrode-explain.minus .rx-box { border-color: #4A7BAA; }
 .electrode-explain.plus .rx-box { border-color: #D97A4B; }
+.electrode-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.electrode-pair .explainer { margin-top: 0; }
+.electrode-pair .electrode-explain {
+  flex-direction: column;
+  align-items: center;
+}
+.electrode-pair .electrode-explain .diagram { flex: none; width: 100%; max-width: 200px; }
+.electrode-pair .electrode-explain .steps { width: 100%; }
+@media (max-width: 720px) {
+  .electrode-pair { grid-template-columns: 1fr; }
+}
 .step-info {
   margin-top: 12px;
   background: #FFF4E0;
@@ -437,51 +453,53 @@ sub, sup { font-size: 0.7em; }
     電圧は約1.1V（教科書値）。セロハンで2つの水溶液を仕切り、それぞれの金属を導線でつなぐと電池になります。
   </p>
 
-  <details class="explainer">
-    <summary>💡 (-)極（亜鉛側）では何が起きてる？</summary>
-    <div class="explainer-body">
-      <div class="electrode-explain minus">
-        <div class="diagram">
-          <div class="e-up">↑ e⁻ 導線へ</div>
-          <div class="rod-shape zinc">Zn</div>
-          <div class="ion-out">Zn²⁺ → 水溶液へ</div>
-          <div class="liquid-label">ZnSO₄ 水溶液</div>
-        </div>
-        <div class="steps">
-          <ol>
-            <li>亜鉛(Zn)の原子が、<strong>電子を2つ手放す</strong></li>
-            <li>その電子は <strong>導線を通って</strong>(+)銅板に向かう（これが電流の正体）</li>
-            <li>亜鉛は <strong>Zn²⁺ になって水溶液中にとけ出る</strong> → 亜鉛板はやせ細る</li>
-            <li><strong>気体は発生しない</strong>（ここがボルタ電池との大きな違い）</li>
-          </ol>
-          <div class="rx-box">反応式：<strong>Zn → Zn²⁺ + 2e⁻</strong></div>
+  <div class="electrode-pair">
+    <details class="explainer">
+      <summary>💡 (-)極（亜鉛側）では何が起きてる？</summary>
+      <div class="explainer-body">
+        <div class="electrode-explain minus">
+          <div class="diagram">
+            <div class="e-up">↑ e⁻ 導線へ</div>
+            <div class="rod-shape zinc">Zn</div>
+            <div class="ion-out">Zn²⁺ → 水溶液へ</div>
+            <div class="liquid-label">ZnSO₄ 水溶液</div>
+          </div>
+          <div class="steps">
+            <ol>
+              <li>亜鉛(Zn)の原子が、<strong>電子を2つ手放す</strong></li>
+              <li>その電子は <strong>導線を通って</strong>(+)銅板に向かう（これが電流の正体）</li>
+              <li>亜鉛は <strong>Zn²⁺ になって水溶液中にとけ出る</strong> → 亜鉛板はやせ細る</li>
+              <li><strong>気体は発生しない</strong>（ここがボルタ電池との大きな違い）</li>
+            </ol>
+            <div class="rx-box">反応式：<strong>Zn → Zn²⁺ + 2e⁻</strong></div>
+          </div>
         </div>
       </div>
-    </div>
-  </details>
+    </details>
 
-  <details class="explainer">
-    <summary>💡 (+)極（銅側）では何が起きてる？</summary>
-    <div class="explainer-body">
-      <div class="electrode-explain plus">
-        <div class="diagram">
-          <div class="e-up">↓ e⁻ 導線から</div>
-          <div class="rod-shape copper">Cu</div>
-          <div class="ion-in">Cu²⁺ ← 水溶液から</div>
-          <div class="liquid-label">CuSO₄ 水溶液</div>
-        </div>
-        <div class="steps">
-          <ol>
-            <li>導線を通って <strong>電子が送られてくる</strong></li>
-            <li>水溶液中の <strong>銅イオン(Cu²⁺)が電子を2つ受け取る</strong></li>
-            <li>Cu²⁺ は <strong>銅となって銅板に付着する</strong> → 銅板が厚くなる</li>
-            <li>水溶液の Cu²⁺ が減るので <strong>青色がうすくなっていく</strong></li>
-          </ol>
-          <div class="rx-box">反応式：<strong>Cu²⁺ + 2e⁻ → Cu</strong></div>
+    <details class="explainer">
+      <summary>💡 (+)極（銅側）では何が起きてる？</summary>
+      <div class="explainer-body">
+        <div class="electrode-explain plus">
+          <div class="diagram">
+            <div class="e-up">↓ e⁻ 導線から</div>
+            <div class="rod-shape copper">Cu</div>
+            <div class="ion-in">Cu²⁺ ← 水溶液から</div>
+            <div class="liquid-label">CuSO₄ 水溶液</div>
+          </div>
+          <div class="steps">
+            <ol>
+              <li>導線を通って <strong>電子が送られてくる</strong></li>
+              <li>水溶液中の <strong>銅イオン(Cu²⁺)が電子を2つ受け取る</strong></li>
+              <li>Cu²⁺ は <strong>銅となって銅板に付着する</strong> → 銅板が厚くなる</li>
+              <li>水溶液の Cu²⁺ が減るので <strong>青色がうすくなっていく</strong></li>
+            </ol>
+            <div class="rx-box">反応式：<strong>Cu²⁺ + 2e⁻ → Cu</strong></div>
+          </div>
         </div>
       </div>
-    </div>
-  </details>
+    </details>
+  </div>
 
   <details class="explainer">
     <summary>💡 セロハンを通るイオンは何のため？（発展）</summary>

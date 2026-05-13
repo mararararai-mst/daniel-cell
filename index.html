@@ -163,14 +163,18 @@ input[type="range"] {
   transition: width 0.18s ease;
   border-radius: 999px;
 }
-.btn.charging {
-  background: #5FA8D8;
-  color: #fff;
-  border-color: #5FA8D8;
-  box-shadow: 2px 2px 0 #2E6E97;
+.depleted-note {
+  margin-top: 8px;
+  background: #FFEFE6;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #6a4a30;
+  font-weight: 500;
+  display: none;
 }
-.btn.charging:hover { box-shadow: 3px 3px 0 #2E6E97; }
-.btn.charging:active { box-shadow: 1px 1px 0 #2E6E97; }
+.depleted-note.show { display: block; }
 .step-info {
   margin-top: 12px;
   background: #FFF4E0;
@@ -271,7 +275,6 @@ sub, sup { font-size: 0.7em; }
 
     <div id="auto-controls" style="display: contents;">
       <button id="play-btn" class="btn primary">▶ 動かす</button>
-      <button id="charge-btn" class="btn">⚡ 充電する</button>
       <div class="charge-bar-wrap" title="電池残量">
         <span class="charge-label">残量</span>
         <div class="charge-bar"><div id="charge-bar-fill"></div></div>
@@ -282,7 +285,7 @@ sub, sup { font-size: 0.7em; }
         <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1">
         <span id="speed-label">×1.0</span>
       </div>
-      <button id="reset-btn" class="btn">↺ リセット</button>
+      <button id="reset-btn" class="btn" title="水溶液や金属板を新しくする（電池そのものを取り替える）">↻ 電池を新しくする</button>
     </div>
 
     <div id="step-controls" style="display: none; gap: 10px; align-items: center;">
@@ -290,6 +293,10 @@ sub, sup { font-size: 0.7em; }
       <span class="step-counter" id="step-counter">1 / 6</span>
       <button id="next-step" class="btn primary">次へ →</button>
     </div>
+  </div>
+
+  <div class="depleted-note" id="depleted-note">
+    🔋 <strong>電池が消耗しました。</strong>ダニエル電池は一次電池なので充電できません。<strong>水溶液や金属板を新しくする（電池そのものを取り替える）</strong>と、また使えるようになります → 「↻ 電池を新しくする」を押してみよう。
   </div>
 
   <div class="step-info" id="step-info">
@@ -323,11 +330,10 @@ let playing = false;
 let speedMul = 1.0;
 let stepIndex = 0;
 // Battery charge level: 1.0 = full, 0.0 = depleted
-// Discharges while playing in AUTO mode, recharges while isCharging=true (二次電池 = 充電池)
+// Depletes while playing in AUTO mode. ダニエル電池は一次電池 — 充電不可。
+// 教科書: 消耗したら水溶液や金属板を新しくする(電池そのものを取り替える)
 let chargeLevel = 1.0;
-let isCharging = false;
 const FULL_DISCHARGE_TICKS = 60 * 90; // ~90 seconds at 60fps speed×1
-const CHARGE_SPEED_MULT = 2.0;       // charges roughly 2× faster than it discharges
 
 // Step definitions: which animations are active
 // flags: zn (Zn dissolution), e (electron flow), cu (Cu deposition), cellophane (ion through cellophane), labels (show labels)
@@ -344,10 +350,8 @@ const STEPS = [
     flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
   { title: '全体が連動する', desc: '亜鉛が溶け、電子が導線を流れ、銅が析出し、イオンがセロハンを通る——これらが同時に起きて、約1.1Vの電圧を長時間安定して取り出せます。',
     flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
-  { title: '電池がへたってきた', desc: '時間がたつと、亜鉛板はやせ細り、CuSO₄水溶液の青色は薄くなります（Cu²⁺が消費されたため）。ZnSO₄水溶液はだんだん濃くなります。やがて電圧が下がり、電池は使えなくなります。',
+  { title: '電池がへたってきた', desc: '時間がたつと、亜鉛板はやせ細り、CuSO₄水溶液の青色は薄くなります（Cu²⁺が消費されたため）。ZnSO₄水溶液はだんだん濃くなります。やがて電圧が下がり、電池は使えなくなります。ダニエル電池は一次電池なので、もう一度使うには水溶液や金属板を新しくする（電池そのものを取り替える）必要があります。',
     flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true }, depletedDemo: true },
-  { title: '充電で復活させる', desc: '外部電源で「逆向き」の電流を流すと、銅板にたまった銅がCu²⁺に戻り、Zn²⁺は亜鉛板に戻ります。低下した電圧が回復し、再び使えるようになります。これを充電といい、充電できる電池を二次電池（蓄電池）といいます。',
-    flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true }, chargingDemo: true },
 ];
 
 // ----- Helpers
@@ -551,42 +555,23 @@ function draw() {
   drawBeakerLabels(L);
 
   // === Animations (based on flags + playing state)
-  // direction: 1 = discharge (normal), -1 = charge (reverse)
-  // In step-execution mode, we don't deplete/charge automatically — only animate
-  let animActive = false;
-  let direction = 1;
-  if (mode === MODES.AUTO) {
-    if (isCharging) { animActive = true; direction = -1; }
-    else if (playing) { animActive = true; direction = 1; }
-  } else {
-    // step mode: animate based on step flags
-    animActive = true;
-    const stepDef = STEPS[stepIndex];
-    if (stepDef && stepDef.chargingDemo) direction = -1;
-  }
+  // ダニエル電池は一次電池 — 放電方向のみ (direction=1 固定)
+  const animActive = (mode === MODES.AUTO) ? playing : true;
+  const direction = 1;
   const dt = (animActive ? 1 : 0) * speedMul;
 
-  // Update charge level (AUTO mode only; step mode demos handle their own state)
+  // Update charge level (AUTO mode: deplete while playing; STEP mode: demo logic)
   if (mode === MODES.AUTO && animActive) {
-    if (direction === 1) {
-      chargeLevel = Math.max(0, chargeLevel - (speedMul / FULL_DISCHARGE_TICKS));
-      if (chargeLevel <= 0) {
-        playing = false;
-        document.getElementById('play-btn').textContent = '▶ 動かす';
-      }
-    } else {
-      chargeLevel = Math.min(1, chargeLevel + (speedMul * CHARGE_SPEED_MULT / FULL_DISCHARGE_TICKS));
-      if (chargeLevel >= 1) {
-        isCharging = false;
-        document.getElementById('charge-btn').textContent = '⚡ 充電する';
-        document.getElementById('charge-btn').classList.remove('charging');
-      }
+    chargeLevel = Math.max(0, chargeLevel - (speedMul / FULL_DISCHARGE_TICKS));
+    if (chargeLevel <= 0) {
+      playing = false;
+      document.getElementById('play-btn').textContent = '▶ 動かす';
+      activeFlags.voltage = false;
+      document.getElementById('depleted-note').classList.add('show');
     }
   } else if (mode === MODES.STEP) {
-    // Step demos use synthetic charge level for visual effect
     const stepDef = STEPS[stepIndex];
     if (stepDef && stepDef.depletedDemo) chargeLevel = Math.max(0.15, chargeLevel - 0.012 * speedMul);
-    else if (stepDef && stepDef.chargingDemo) chargeLevel = Math.min(1, chargeLevel + 0.008 * speedMul);
     else chargeLevel = 1.0;
   }
   updateChargeUI();
@@ -940,36 +925,11 @@ document.getElementById('mode-step').addEventListener('click', () => {
 });
 
 document.getElementById('play-btn').addEventListener('click', () => {
-  // If we were charging, stop charging first
-  if (isCharging) {
-    isCharging = false;
-    document.getElementById('charge-btn').textContent = '⚡ 充電する';
-    document.getElementById('charge-btn').classList.remove('charging');
-  }
-  // If depleted, refuse to discharge further (must charge first)
-  if (chargeLevel <= 0 && !playing) {
-    // do nothing — user needs to press 充電する
-    return;
-  }
+  // 電池が消耗したら動かせない — 「電池を新しくする」を押す必要がある
+  if (chargeLevel <= 0 && !playing) return;
   playing = !playing;
   document.getElementById('play-btn').textContent = playing ? '⏸ 一時停止' : '▶ 動かす';
   activeFlags.voltage = playing;
-});
-
-document.getElementById('charge-btn').addEventListener('click', () => {
-  if (isCharging) {
-    isCharging = false;
-    document.getElementById('charge-btn').textContent = '⚡ 充電する';
-    document.getElementById('charge-btn').classList.remove('charging');
-  } else {
-    // start charging — stop discharge first
-    playing = false;
-    document.getElementById('play-btn').textContent = '▶ 動かす';
-    isCharging = true;
-    document.getElementById('charge-btn').textContent = '⏹ 充電をやめる';
-    document.getElementById('charge-btn').classList.add('charging');
-    activeFlags.voltage = true; // show voltage during charge
-  }
 });
 
 document.getElementById('speed').addEventListener('input', (e) => {
@@ -978,11 +938,9 @@ document.getElementById('speed').addEventListener('input', (e) => {
 });
 
 document.getElementById('reset-btn').addEventListener('click', () => {
+  // 水溶液と金属板を新しくする (＝電池そのものを取り替える)
   playing = false;
-  isCharging = false;
   document.getElementById('play-btn').textContent = '▶ 動かす';
-  document.getElementById('charge-btn').textContent = '⚡ 充電する';
-  document.getElementById('charge-btn').classList.remove('charging');
   activeFlags.voltage = false;
   chargeLevel = 1.0;
   resetIons();
@@ -990,6 +948,7 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     electronPos[i] = (i / N_ELECTRONS) * electronTotalLen;
   }
   drawVoltMeter._cur = 0;
+  document.getElementById('depleted-note').classList.remove('show');
   updateChargeUI();
 });
 

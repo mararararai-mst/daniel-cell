@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ダニエル電池シミュレーション｜中3理科</title>
+<meta property="og:title" content="ダニエル電池シミュレーション">
+<meta property="og:description" content="中学3年「化学変化と電池」の電子・イオンの動きを段階的に可視化する教材。自動再生／ステップ実行の2モード。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&family=Kaisei+Decol:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+:root {
+  --bg: #FAF6E8;
+  --paper: #FFFBF0;
+  --ink: #3A3530;
+  --accent: #D97A4B;
+  --accent2: #4A7BAA;
+  --zinc: #B0B4B8;
+  --copper: #C97D4A;
+  --znso4: #E8F1F5;
+  --cuso4: #5FA8D8;
+  --cellophane: #F5DBA0;
+  --grid: rgba(180, 160, 120, 0.12);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'M PLUS Rounded 1c', system-ui, sans-serif;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  min-height: 100vh;
+}
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 20px 40px;
+}
+header.title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 12px;
+  border-bottom: 3px dashed var(--accent);
+  padding-bottom: 8px;
+}
+header.title h1 {
+  font-size: 26px;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+header.title .sub {
+  font-size: 13px;
+  color: #8a7a60;
+  font-family: 'Kaisei Decol', serif;
+}
+.stage {
+  background: var(--paper);
+  border-radius: 18px;
+  padding: 10px;
+  box-shadow: 0 4px 14px rgba(120, 100, 80, 0.08);
+  border: 2px solid #EADFC4;
+  position: relative;
+}
+#canvas-host {
+  width: 100%;
+  display: block;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 12px 16px;
+  border: 2px solid #EADFC4;
+}
+.mode-toggle {
+  display: inline-flex;
+  background: #F0E6CC;
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+.mode-toggle button {
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #8a7a60;
+}
+.mode-toggle button.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(217, 122, 75, 0.3);
+}
+.btn {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 2px 2px 0 #8C4A28; }
+.btn.primary:hover { box-shadow: 3px 3px 0 #8C4A28; }
+.btn.primary:active { box-shadow: 1px 1px 0 #8C4A28; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--ink); }
+.slider-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6a5a40;
+}
+input[type="range"] {
+  width: 130px;
+  accent-color: var(--accent);
+}
+.step-info {
+  margin-top: 12px;
+  background: #FFF4E0;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: none;
+}
+.step-info.active { display: block; }
+.step-info .step-no {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-right: 8px;
+}
+.step-info .step-title {
+  font-size: 17px;
+  font-weight: 800;
+  display: inline;
+}
+.step-info .step-desc {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4a4035;
+}
+.step-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+.step-counter {
+  font-size: 13px;
+  color: #8a7a60;
+  font-weight: 700;
+}
+.reactions {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.rx {
+  background: var(--paper);
+  border-radius: 12px;
+  padding: 12px 14px;
+  border-left: 5px solid;
+  font-family: 'Kaisei Decol', serif;
+  font-size: 15px;
+}
+.rx.minus { border-color: var(--accent2); }
+.rx.plus { border-color: var(--copper); }
+.rx .label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a7a60;
+  display: block;
+  margin-bottom: 4px;
+}
+.notes {
+  margin-top: 18px;
+  font-size: 12px;
+  color: #8a7a60;
+  line-height: 1.6;
+}
+.notes a { color: var(--accent2); }
+sub, sup { font-size: 0.7em; }
+@media (max-width: 720px) {
+  .reactions { grid-template-columns: 1fr; }
+  header.title h1 { font-size: 20px; }
+  .controls { padding: 10px; gap: 6px; }
+  .btn { padding: 7px 14px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="title">
+    <h1>🧪 ダニエル電池シミュレーション</h1>
+    <span class="sub">中3 理科 ／ 単元1-3 化学変化と電池</span>
+  </header>
+
+  <div class="stage">
+    <div id="canvas-host"></div>
+  </div>
+
+  <div class="controls">
+    <div class="mode-toggle" role="tablist" aria-label="再生モード">
+      <button id="mode-auto" class="active" role="tab" aria-selected="true">▶ 自動再生</button>
+      <button id="mode-step" role="tab" aria-selected="false">📖 ステップ実行</button>
+    </div>
+
+    <div id="auto-controls" style="display: contents;">
+      <button id="play-btn" class="btn primary">▶ 動かす</button>
+      <div class="slider-wrap">
+        <span>速さ</span>
+        <input type="range" id="speed" min="0.25" max="2" step="0.25" value="1">
+        <span id="speed-label">×1.0</span>
+      </div>
+      <button id="reset-btn" class="btn">↺ リセット</button>
+    </div>
+
+    <div id="step-controls" style="display: none; gap: 10px; align-items: center;">
+      <button id="prev-step" class="btn">← 前へ</button>
+      <span class="step-counter" id="step-counter">1 / 6</span>
+      <button id="next-step" class="btn primary">次へ →</button>
+    </div>
+  </div>
+
+  <div class="step-info" id="step-info">
+    <span class="step-no" id="step-no">STEP 1</span>
+    <span class="step-title" id="step-title">装置の構成</span>
+    <div class="step-desc" id="step-desc"></div>
+  </div>
+
+  <div class="reactions">
+    <div class="rx minus">
+      <span class="label">(-)極 ／ 亜鉛側</span>
+      Zn → Zn<sup>2+</sup> + 2e<sup>-</sup>
+    </div>
+    <div class="rx plus">
+      <span class="label">(+)極 ／ 銅側</span>
+      Cu<sup>2+</sup> + 2e<sup>-</sup> → Cu
+    </div>
+  </div>
+
+  <p class="notes">
+    電圧は約1.1V（教科書値）。セロハンで2つの水溶液を仕切り、それぞれの金属を導線でつなぐと電池になります。<br>
+    参考：<a href="https://javalab.org/ja/chemical_cell_ja/" target="_blank" rel="noopener">JavaLab・化学電池</a>（出典として閲覧可・本サイトは独自実装）
+  </p>
+</div>
+
+<script>
+// ===== Daniel Cell Simulation (p5.js) =====
+// State
+const MODES = { AUTO: 'auto', STEP: 'step' };
+let mode = MODES.AUTO;
+let playing = false;
+let speedMul = 1.0;
+let stepIndex = 0;
+
+// Step definitions: which animations are active
+// flags: zn (Zn dissolution), e (electron flow), cu (Cu deposition), cellophane (ion through cellophane), labels (show labels)
+const STEPS = [
+  { title: '装置の構成', desc: '亜鉛板を硫酸亜鉛(ZnSO₄)水溶液に、銅板を硫酸銅(CuSO₄)水溶液に入れ、セロハンで仕切ります。2つの金属を導線でつなぎ、電圧計をつけました。',
+    flags: { zn: false, e: false, cu: false, cellophane: false, labels: true, voltage: false } },
+  { title: '亜鉛が溶け出す', desc: '(-)極の亜鉛が電子を2つ残して亜鉛イオン(Zn²⁺)になり、水溶液の中にとけ出します。\nZn → Zn²⁺ + 2e⁻',
+    flags: { zn: true, e: false, cu: false, cellophane: false, labels: false, voltage: false } },
+  { title: '電子が導線を流れる', desc: '亜鉛に残された電子は、導線を通って(+)極の銅板へ向かって移動します。これが電流の正体です。電圧計の針が振れて電圧が示されます。',
+    flags: { zn: true, e: true, cu: false, cellophane: false, labels: false, voltage: true } },
+  { title: '銅が析出する', desc: '(+)極では、水溶液中の銅イオン(Cu²⁺)が、導線から運ばれてきた電子を受け取って銅となり、銅板に付着します。\nCu²⁺ + 2e⁻ → Cu',
+    flags: { zn: true, e: true, cu: true, cellophane: false, labels: false, voltage: true } },
+  { title: 'セロハンを通るイオン', desc: 'セロハンには小さな穴があり、イオンは通り抜けることができます。これで2つの水溶液の電気のバランスが保たれ、電池が動き続けます。',
+    flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
+  { title: '全体が連動する', desc: '亜鉛が溶け、電子が導線を流れ、銅が析出し、イオンがセロハンを通る——これらが同時に起きて、約1.1Vの電圧を長時間安定して取り出せます。',
+    flags: { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true } },
+];
+
+// ----- Helpers
+function applyStepFlags() {
+  const f = STEPS[stepIndex].flags;
+  Object.assign(activeFlags, f);
+  document.getElementById('step-no').textContent = 'STEP ' + (stepIndex + 1);
+  document.getElementById('step-title').textContent = STEPS[stepIndex].title;
+  document.getElementById('step-desc').textContent = STEPS[stepIndex].desc;
+  document.getElementById('step-counter').textContent = (stepIndex + 1) + ' / ' + STEPS.length;
+  document.getElementById('prev-step').disabled = (stepIndex === 0);
+  document.getElementById('next-step').disabled = (stepIndex === STEPS.length - 1);
+}
+
+const activeFlags = { zn: true, e: true, cu: true, cellophane: true, labels: false, voltage: true };
+
+// ===== Particles =====
+// Electron path: (-)Zn top → up → over → down → (+)Cu top
+// Coords are in canvas-relative pixels; we'll scale per draw.
+let canvasW = 1000, canvasH = 600;
+
+// We'll define normalized layout (0..1) and scale at draw time.
+const LAYOUT = {
+  beakerY: 0.40, // top of beakers
+  beakerH: 0.45, // height of beakers
+  liquidTopOffset: 0.06, // liquid top inside beaker
+  leftBeakerX: 0.08, leftBeakerW: 0.32,
+  rightBeakerX: 0.60, rightBeakerW: 0.32,
+  cellophaneX: 0.495, cellophaneW: 0.010,
+  electrodeW: 0.025, electrodeH: 0.30,
+  electrodeTopY: 0.33, // top of electrode rod above liquid
+  // Wire path
+  wireZnTop: { x: 0.20, y: 0.18 },
+  wireCuTop: { x: 0.76, y: 0.18 },
+  voltMeterX: 0.48, voltMeterY: 0.10, voltMeterW: 0.18, voltMeterH: 0.12,
+};
+
+// Electron path nodes (normalized)
+let electronPathNorm = [];
+// pre-built path segments + cumulative length
+let electronSegs = [];
+let electronTotalLen = 0;
+const N_ELECTRONS = 24;
+let electronPos = []; // distance along path [0..totalLen]
+
+// Zn²⁺ particles (left beaker, emerging from Zn electrode going right/down)
+const ZN2_PARTICLES = 10;
+let zn2 = [];
+
+// Cu²⁺ particles (right beaker, moving toward Cu electrode)
+const CU2_PARTICLES = 10;
+let cu2 = [];
+
+// Cellophane ion crossing (SO₄²⁻ etc. — we just show small dots crossing)
+const CELLO_PARTICLES = 6;
+let celloIons = [];
+
+function buildElectronPath() {
+  // Path: top of Zn electrode → up to wireZnTop → across through volt meter → down to wireCuTop → top of Cu electrode
+  // Electrons travel through the wire only (not into the liquid). Textbook: 電子は導線を通る
+  const lbX = LAYOUT.leftBeakerX + LAYOUT.leftBeakerW * 0.55;
+  const rbX = LAYOUT.rightBeakerX + LAYOUT.rightBeakerW * 0.45;
+  const electrodeTop = LAYOUT.electrodeTopY;
+  electronPathNorm = [
+    { x: lbX, y: electrodeTop },
+    { x: LAYOUT.wireZnTop.x, y: electrodeTop },
+    { x: LAYOUT.wireZnTop.x, y: LAYOUT.wireZnTop.y },
+    { x: LAYOUT.voltMeterX - 0.02, y: LAYOUT.wireZnTop.y },
+    { x: LAYOUT.voltMeterX + LAYOUT.voltMeterW + 0.02, y: LAYOUT.wireZnTop.y },
+    { x: LAYOUT.wireCuTop.x, y: LAYOUT.wireZnTop.y },
+    { x: LAYOUT.wireCuTop.x, y: electrodeTop },
+    { x: rbX, y: electrodeTop },
+  ];
+  electronSegs = [];
+  electronTotalLen = 0;
+  for (let i = 0; i < electronPathNorm.length - 1; i++) {
+    const a = electronPathNorm[i], b = electronPathNorm[i + 1];
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    electronSegs.push({ a, b, len, cum: electronTotalLen });
+    electronTotalLen += len;
+  }
+  // distribute electrons
+  electronPos = [];
+  for (let i = 0; i < N_ELECTRONS; i++) {
+    electronPos.push((i / N_ELECTRONS) * electronTotalLen);
+  }
+}
+
+function resetIons() {
+  zn2 = [];
+  for (let i = 0; i < ZN2_PARTICLES; i++) zn2.push(makeZn2(i / ZN2_PARTICLES));
+  cu2 = [];
+  for (let i = 0; i < CU2_PARTICLES; i++) cu2.push(makeCu2(i / CU2_PARTICLES));
+  celloIons = [];
+  for (let i = 0; i < CELLO_PARTICLES; i++) celloIons.push(makeCelloIon(i / CELLO_PARTICLES));
+}
+
+function makeZn2(t) {
+  return { t: t, lifetime: 1.0 + Math.random() * 1.0 };
+}
+function makeCu2(t) {
+  return { t: t, lifetime: 1.0 + Math.random() * 1.0 };
+}
+function makeCelloIon(t) {
+  // alternate direction: even index goes right (Zn²⁺ migrate to cathode side conceptually),
+  // odd goes left. We label as generic "ion" since textbook is vague.
+  return { t: t, dir: (Math.random() < 0.5 ? 1 : -1) };
+}
+
+// ===== Canvas setup =====
+function pixelLayout() {
+  // compute pixel-coords once per frame
+  const w = canvasW, h = canvasH;
+  return {
+    w, h,
+    beakerY: LAYOUT.beakerY * h,
+    beakerH: LAYOUT.beakerH * h,
+    liquidTopY: (LAYOUT.beakerY + LAYOUT.liquidTopOffset) * h,
+    liquidBottomY: (LAYOUT.beakerY + LAYOUT.beakerH - 0.02) * h,
+    leftBeakerX: LAYOUT.leftBeakerX * w, leftBeakerW: LAYOUT.leftBeakerW * w,
+    rightBeakerX: LAYOUT.rightBeakerX * w, rightBeakerW: LAYOUT.rightBeakerW * w,
+    cellophaneX: LAYOUT.cellophaneX * w, cellophaneW: LAYOUT.cellophaneW * w,
+    electrodeW: LAYOUT.electrodeW * w, electrodeH: LAYOUT.electrodeH * h,
+    electrodeTopY: LAYOUT.electrodeTopY * h,
+    wireZnTop: { x: LAYOUT.wireZnTop.x * w, y: LAYOUT.wireZnTop.y * h },
+    wireCuTop: { x: LAYOUT.wireCuTop.x * w, y: LAYOUT.wireCuTop.y * h },
+    voltMeterX: LAYOUT.voltMeterX * w, voltMeterY: LAYOUT.voltMeterY * h,
+    voltMeterW: LAYOUT.voltMeterW * w, voltMeterH: LAYOUT.voltMeterH * h,
+    znElecX: (LAYOUT.leftBeakerX + LAYOUT.leftBeakerW * 0.55) * w,
+    cuElecX: (LAYOUT.rightBeakerX + LAYOUT.rightBeakerW * 0.45) * w,
+  };
+}
+
+function setup() {
+  const host = document.getElementById('canvas-host');
+  const w = Math.min(1040, host.clientWidth || 1040);
+  const h = Math.round(w * 0.6);
+  canvasW = w; canvasH = h;
+  const c = createCanvas(w, h);
+  c.parent('canvas-host');
+  frameRate(60);
+  buildElectronPath();
+  resetIons();
+  applyStepFlags();
+  updateModeUI();
+}
+
+function windowResized() {
+  const host = document.getElementById('canvas-host');
+  const w = Math.min(1040, host.clientWidth || 1040);
+  const h = Math.round(w * 0.6);
+  canvasW = w; canvasH = h;
+  resizeCanvas(w, h);
+}
+
+function draw() {
+  background(255, 251, 240);
+
+  const L = pixelLayout();
+
+  // Draw beakers (back)
+  drawBeaker(L.leftBeakerX, L.beakerY, L.leftBeakerW, L.beakerH, 'znso4');
+  drawBeaker(L.rightBeakerX, L.beakerY, L.rightBeakerW, L.beakerH, 'cuso4');
+
+  // Cellophane (between beakers, sits over the gap)
+  drawCellophane(L);
+
+  // Wires (under)
+  drawWires(L);
+
+  // Volt meter (with dial)
+  drawVoltMeter(L);
+
+  // Electrodes (over liquid)
+  drawElectrode(L.znElecX, L, 'zinc', '亜鉛 (Zn)', '(-)');
+  drawElectrode(L.cuElecX, L, 'copper', '銅 (Cu)', '(+)');
+
+  // Beaker labels (always visible)
+  drawBeakerLabels(L);
+
+  // === Animations (based on flags + playing state)
+  const dt = (mode === MODES.AUTO ? (playing ? 1 : 0) : 1) * speedMul;
+
+  // Electrons
+  if (activeFlags.e) {
+    for (let i = 0; i < electronPos.length; i++) {
+      electronPos[i] = (electronPos[i] + 0.005 * dt) % electronTotalLen;
+      drawElectronAt(electronPos[i], L);
+    }
+  }
+
+  // Zn²⁺
+  if (activeFlags.zn) {
+    for (let p of zn2) {
+      p.t += 0.005 * dt;
+      if (p.t > 1) p.t = 0;
+      drawZn2(p, L);
+    }
+  }
+  // Cu²⁺
+  if (activeFlags.cu) {
+    for (let p of cu2) {
+      p.t += 0.005 * dt;
+      if (p.t > 1) p.t = 0;
+      drawCu2(p, L);
+    }
+  }
+  // Cellophane ion crossings
+  if (activeFlags.cellophane) {
+    for (let p of celloIons) {
+      p.t += 0.004 * dt;
+      if (p.t > 1) { p.t = 0; p.dir = (Math.random() < 0.5 ? 1 : -1); }
+      drawCelloIon(p, L);
+    }
+  }
+
+  // Labels (only shown in step 1)
+  if (activeFlags.labels) {
+    drawLabels(L);
+  }
+}
+
+// ===== Drawing helpers =====
+function drawBeaker(x, y, w, h, liquid) {
+  // glass beaker outline
+  noFill();
+  stroke(140, 130, 110, 200);
+  strokeWeight(3);
+  // glass body
+  rect(x, y, w, h, 4, 4, 14, 14);
+  // liquid
+  noStroke();
+  if (liquid === 'znso4') fill(232, 241, 245, 220);  // pale blue/clear
+  else fill(95, 168, 216, 200);                       // cuso4 blue
+  rect(x + 4, y + (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)), w - 8, h - (LAYOUT.liquidTopOffset * canvasH - (LAYOUT.beakerY * canvasH - y)) - 6, 0, 0, 12, 12);
+}
+
+function drawCellophane(L) {
+  // a vertical strip between the two beakers covering the gap top
+  const x = L.cellophaneX;
+  const top = L.beakerY - 6;
+  const bot = L.beakerY + L.beakerH - 4;
+  noStroke();
+  fill(245, 219, 160, 160);
+  rect(x - L.cellophaneW / 2, top, L.cellophaneW + 8, bot - top, 4);
+  // texture dots (small holes)
+  fill(160, 130, 80, 100);
+  for (let yy = top + 10; yy < bot - 6; yy += 14) {
+    ellipse(x + L.cellophaneW / 2, yy, 2.5, 2.5);
+  }
+  // label
+  fill(120, 90, 40);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textSize(Math.max(11, canvasW / 80));
+  textStyle(BOLD);
+  text('セロハン', x + L.cellophaneW / 2, top - 8);
+}
+
+function drawWires(L) {
+  // wire from Zn rod top → up → across (via volt meter) → down → Cu rod top
+  stroke(60, 50, 40);
+  strokeWeight(3);
+  noFill();
+  // up segments
+  line(L.znElecX, L.electrodeTopY, L.wireZnTop.x, L.electrodeTopY);
+  line(L.wireZnTop.x, L.electrodeTopY, L.wireZnTop.x, L.wireZnTop.y);
+  // top horizontal to volt meter
+  line(L.wireZnTop.x, L.wireZnTop.y, L.voltMeterX, L.wireZnTop.y);
+  line(L.voltMeterX + L.voltMeterW, L.wireZnTop.y, L.wireCuTop.x, L.wireZnTop.y);
+  line(L.wireCuTop.x, L.wireZnTop.y, L.wireCuTop.x, L.electrodeTopY);
+  line(L.wireCuTop.x, L.electrodeTopY, L.cuElecX, L.electrodeTopY);
+}
+
+function drawVoltMeter(L) {
+  // box
+  noStroke();
+  fill(255);
+  rect(L.voltMeterX, L.voltMeterY, L.voltMeterW, L.voltMeterH, 8);
+  stroke(60, 50, 40);
+  strokeWeight(2);
+  noFill();
+  rect(L.voltMeterX, L.voltMeterY, L.voltMeterW, L.voltMeterH, 8);
+  // dial
+  const cx = L.voltMeterX + L.voltMeterW / 2;
+  const cy = L.voltMeterY + L.voltMeterH * 0.65;
+  const r = L.voltMeterH * 0.42;
+  noFill();
+  stroke(180, 160, 130);
+  arc(cx, cy, r * 2, r * 2, PI, TWO_PI);
+  // ticks
+  stroke(120, 100, 80);
+  strokeWeight(1.5);
+  for (let i = 0; i <= 4; i++) {
+    const a = PI + (i / 4) * PI;
+    const x1 = cx + Math.cos(a) * (r - 4);
+    const y1 = cy + Math.sin(a) * (r - 4);
+    const x2 = cx + Math.cos(a) * r;
+    const y2 = cy + Math.sin(a) * r;
+    line(x1, y1, x2, y2);
+  }
+  // needle - resting at 0 if no voltage, swings to ~1.1V (about 73% of scale to 1.5V)
+  const targetFrac = activeFlags.voltage ? 1.1 / 1.5 : 0;
+  // smooth approach
+  if (typeof drawVoltMeter._cur === 'undefined') drawVoltMeter._cur = 0;
+  drawVoltMeter._cur += (targetFrac - drawVoltMeter._cur) * 0.08;
+  const a = PI + drawVoltMeter._cur * PI;
+  stroke(217, 122, 75);
+  strokeWeight(2.5);
+  line(cx, cy, cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2));
+  noStroke();
+  fill(60, 50, 40);
+  ellipse(cx, cy, 4, 4);
+  // label
+  textAlign(CENTER, TOP);
+  textSize(Math.max(10, canvasW / 90));
+  textStyle(BOLD);
+  fill(80, 70, 50);
+  text('電圧計', cx, L.voltMeterY + 4);
+  // current reading
+  textAlign(CENTER, BOTTOM);
+  textSize(Math.max(11, canvasW / 75));
+  fill(217, 122, 75);
+  const reading = activeFlags.voltage ? (1.10 * drawVoltMeter._cur / (1.1 / 1.5)).toFixed(2) : '0.00';
+  text(reading + ' V', cx, L.voltMeterY + L.voltMeterH - 4);
+}
+
+function drawElectrode(x, L, kind, label, sign) {
+  // electrode is a vertical rod inserted into the liquid
+  const top = L.electrodeTopY;
+  const bot = L.liquidBottomY - 8;
+  const w = L.electrodeW;
+  noStroke();
+  if (kind === 'zinc') fill(176, 180, 184); else fill(201, 125, 74);
+  rect(x - w / 2, top, w, bot - top, 4);
+  // shading
+  fill(255, 255, 255, 60);
+  rect(x - w / 2 + 2, top + 4, 2, bot - top - 8);
+  // combined label above electrode (sign + element name on one line)
+  // Placed well above the wire turn so electron particles don't overlap
+  textAlign(CENTER, BOTTOM);
+  textSize(Math.max(13, canvasW / 65));
+  textStyle(BOLD);
+  fill(kind === 'zinc' ? '#4A7BAA' : '#D97A4B');
+  text(sign + ' ' + label, x, top - 24);
+}
+
+function drawBeakerLabels(L) {
+  textAlign(CENTER, BOTTOM);
+  textSize(Math.max(11, canvasW / 82));
+  textStyle(BOLD);
+  fill(80, 70, 50);
+  text('硫酸亜鉛 ZnSO₄ 水溶液', L.leftBeakerX + L.leftBeakerW / 2, L.beakerY + L.beakerH + 22);
+  text('硫酸銅 CuSO₄ 水溶液', L.rightBeakerX + L.rightBeakerW / 2, L.beakerY + L.beakerH + 22);
+}
+
+function drawLabels(L) {
+  // additional labels shown in step 1
+  textAlign(LEFT, CENTER);
+  textSize(Math.max(11, canvasW / 90));
+  textStyle(NORMAL);
+  fill(120, 90, 40);
+  // pointer to wire
+  text('導線', L.voltMeterX + L.voltMeterW + 6, L.wireZnTop.y - 10);
+  text('電圧計', L.voltMeterX + L.voltMeterW + 6, L.wireZnTop.y + 14);
+}
+
+function drawElectronAt(d, L) {
+  // find segment
+  let seg = null;
+  for (let i = 0; i < electronSegs.length; i++) {
+    if (d >= electronSegs[i].cum && d < electronSegs[i].cum + electronSegs[i].len) {
+      seg = electronSegs[i];
+      break;
+    }
+  }
+  if (!seg) seg = electronSegs[electronSegs.length - 1];
+  const localT = (d - seg.cum) / seg.len;
+  const nx = lerp(seg.a.x, seg.b.x, localT);
+  const ny = lerp(seg.a.y, seg.b.y, localT);
+  const px = nx * canvasW;
+  const py = ny * canvasH;
+  // electron: blue circle with white minus
+  noStroke();
+  fill(74, 123, 170);
+  ellipse(px, py, canvasW * 0.014, canvasW * 0.014);
+  fill(255);
+  rect(px - canvasW * 0.004, py - canvasW * 0.001, canvasW * 0.008, canvasW * 0.002);
+}
+
+function drawZn2(p, L) {
+  // emerge from Zn electrode surface, drift right/down into liquid
+  const startX = L.znElecX + L.electrodeW * 0.55;
+  const startY = lerp(L.liquidTopY + 8, L.liquidBottomY - 10, ((p.t * 1.3) % 1));
+  const endX = L.leftBeakerX + L.leftBeakerW * 0.85;
+  const x = lerp(startX, endX, p.t);
+  const y = startY + Math.sin(p.t * Math.PI * 2 + p.lifetime * 3) * 4;
+  const alpha = (p.t < 0.15 ? p.t / 0.15 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 255;
+  drawIon(x, y, 'Zn²⁺', '#E8A040', alpha);
+}
+
+function drawCu2(p, L) {
+  // start in liquid bulk, move toward Cu electrode then fade (absorbed)
+  const startX = L.rightBeakerX + L.rightBeakerW * 0.15;
+  const startY = lerp(L.liquidTopY + 10, L.liquidBottomY - 10, ((p.t * 1.3 + 0.3) % 1));
+  const endX = L.cuElecX - L.electrodeW * 0.55;
+  const x = lerp(startX, endX, p.t);
+  const y = startY + Math.sin(p.t * Math.PI * 2 + p.lifetime * 2) * 4;
+  const alpha = (p.t < 0.10 ? p.t / 0.10 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 255;
+  drawIon(x, y, 'Cu²⁺', '#5FA8D8', alpha);
+}
+
+function drawCelloIon(p, L) {
+  // small generic ion crossing through cellophane region
+  const baseY = lerp(L.liquidTopY + 20, L.liquidBottomY - 20, ((p.t * 1.5 + 0.2) % 1));
+  const cx = L.cellophaneX + L.cellophaneW / 2;
+  const startX = p.dir > 0 ? cx - canvasW * 0.04 : cx + canvasW * 0.04;
+  const endX = p.dir > 0 ? cx + canvasW * 0.04 : cx - canvasW * 0.04;
+  const x = lerp(startX, endX, p.t);
+  const alpha = (p.t < 0.15 ? p.t / 0.15 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 200;
+  noStroke();
+  fill(180, 140, 90, alpha);
+  ellipse(x, baseY, canvasW * 0.010, canvasW * 0.010);
+}
+
+function drawIon(x, y, label, colorHex, alpha) {
+  noStroke();
+  const c = color(colorHex);
+  c.setAlpha(alpha);
+  fill(c);
+  const r = canvasW * 0.022;
+  ellipse(x, y, r, r);
+  // label
+  fill(255, alpha);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(Math.max(10, canvasW / 95));
+  text(label, x, y);
+}
+
+// ===== UI wiring =====
+function updateModeUI() {
+  const auto = document.getElementById('mode-auto');
+  const step = document.getElementById('mode-step');
+  const autoCtl = document.getElementById('auto-controls');
+  const stepCtl = document.getElementById('step-controls');
+  const stepInfo = document.getElementById('step-info');
+  if (mode === MODES.AUTO) {
+    auto.classList.add('active'); auto.setAttribute('aria-selected', 'true');
+    step.classList.remove('active'); step.setAttribute('aria-selected', 'false');
+    autoCtl.style.display = 'contents';
+    stepCtl.style.display = 'none';
+    stepInfo.classList.remove('active');
+    // auto mode: all animations active
+    activeFlags.zn = true; activeFlags.e = true; activeFlags.cu = true;
+    activeFlags.cellophane = true; activeFlags.labels = false; activeFlags.voltage = playing;
+  } else {
+    auto.classList.remove('active'); auto.setAttribute('aria-selected', 'false');
+    step.classList.add('active'); step.setAttribute('aria-selected', 'true');
+    autoCtl.style.display = 'none';
+    stepCtl.style.display = 'inline-flex';
+    stepInfo.classList.add('active');
+    applyStepFlags();
+  }
+}
+
+document.getElementById('mode-auto').addEventListener('click', () => {
+  mode = MODES.AUTO; updateModeUI();
+});
+document.getElementById('mode-step').addEventListener('click', () => {
+  mode = MODES.STEP;
+  playing = false;
+  document.getElementById('play-btn').textContent = '▶ 動かす';
+  updateModeUI();
+});
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸ 一時停止' : '▶ 動かす';
+  activeFlags.voltage = playing;
+});
+
+document.getElementById('speed').addEventListener('input', (e) => {
+  speedMul = parseFloat(e.target.value);
+  document.getElementById('speed-label').textContent = '×' + speedMul.toFixed(1);
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  playing = false;
+  document.getElementById('play-btn').textContent = '▶ 動かす';
+  activeFlags.voltage = false;
+  resetIons();
+  for (let i = 0; i < electronPos.length; i++) {
+    electronPos[i] = (i / N_ELECTRONS) * electronTotalLen;
+  }
+  drawVoltMeter._cur = 0;
+});
+
+document.getElementById('prev-step').addEventListener('click', () => {
+  if (stepIndex > 0) { stepIndex--; applyStepFlags(); }
+});
+document.getElementById('next-step').addEventListener('click', () => {
+  if (stepIndex < STEPS.length - 1) { stepIndex++; applyStepFlags(); }
+});
+</script>
+</body>
+</html>

@@ -603,9 +603,38 @@ input[type="range"] {
 sub, sup { font-size: 0.7em; }
 @media (max-width: 720px) {
   .reactions { grid-template-columns: 1fr; }
-  header.title h1 { font-size: 20px; }
-  .controls { padding: 10px; gap: 6px; }
   .btn { padding: 7px 14px; font-size: 13px; }
+}
+/* スマホ向け（狭い縦長画面） */
+@media (max-width: 600px) {
+  .wrap { padding: 6px 8px 16px; }
+  header.title { flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  header.title h1 { font-size: 16px; }
+  header.title .sub { font-size: 10px; }
+  .explainer-toggles { flex-direction: column; gap: 4px; margin-bottom: 4px; }
+  .explainer-toggle-btn { width: 100%; font-size: 12px; padding: 7px 10px; box-sizing: border-box; }
+  .stage { padding: 3px; border-radius: 10px; }
+  .controls { flex-direction: column; align-items: stretch; gap: 6px; padding: 8px; }
+  .mode-toggle { width: 100%; justify-content: center; }
+  .mode-toggle button { flex: 1; }
+  .charge-bar-wrap, .slider-wrap { justify-content: space-between; width: 100%; }
+  .charge-bar { flex: 1; min-width: 60px; }
+  input[type="range"] { flex: 1; width: auto; min-width: 0; }
+  .btn { width: 100%; box-sizing: border-box; }
+  .obs-list { grid-template-columns: 1fr 1fr; gap: 4px; }
+  .obs-item { font-size: 11px; padding: 4px 8px; }
+  .overlay-explainer {
+    position: fixed !important;
+    top: 4% !important;
+    left: 4% !important;
+    right: 4% !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 92vh !important;
+    z-index: 1000;
+  }
+  .overlay-explainer.plus { left: 4% !important; right: 4% !important; }
+  .depleted-note { font-size: 12px; padding: 8px 12px; }
 }
 </style>
 </head>
@@ -1026,10 +1055,15 @@ function pixelLayout() {
   };
 }
 
+function canvasRatio() {
+  // 狭い画面(スマホ)では縦長気味、PCでは横長気味に
+  return (window.innerWidth < 600) ? 0.75 : 0.42;
+}
+
 function setup() {
   const host = document.getElementById('canvas-host');
   const w = Math.min(1040, host.clientWidth || 1040);
-  const h = Math.round(w * 0.42);
+  const h = Math.round(w * canvasRatio());
   canvasW = w; canvasH = h;
   const c = createCanvas(w, h);
   c.parent('canvas-host');
@@ -1043,7 +1077,7 @@ function setup() {
 function windowResized() {
   const host = document.getElementById('canvas-host');
   const w = Math.min(1040, host.clientWidth || 1040);
-  const h = Math.round(w * 0.42);
+  const h = Math.round(w * canvasRatio());
   canvasW = w; canvasH = h;
   resizeCanvas(w, h);
 }

@@ -1474,9 +1474,10 @@ function drawElectronAt(d, L) {
   // electron: blue circle with white minus
   noStroke();
   fill(74, 123, 170);
-  ellipse(px, py, canvasW * 0.014, canvasW * 0.014);
+  const er = Math.max(12, canvasW * 0.014);
+  ellipse(px, py, er, er);
   fill(255);
-  rect(px - canvasW * 0.004, py - canvasW * 0.001, canvasW * 0.008, canvasW * 0.002);
+  rect(px - er * 0.30, py - er * 0.06, er * 0.60, Math.max(2, er * 0.14));
 }
 
 function drawZn2(p, L) {
@@ -1522,10 +1523,10 @@ function drawZnEmit(p, L) {
   const alpha = (p.t < 0.15 ? p.t / 0.15 : (p.t > 0.80 ? (1 - p.t) / 0.20 : 1)) * 240;
   noStroke();
   fill(74, 123, 170, alpha);
-  const r = canvasW * 0.012;
+  const r = Math.max(11, canvasW * 0.012);
   ellipse(x, y, r, r);
   fill(255, alpha);
-  rect(x - canvasW * 0.0035, y - canvasW * 0.0008, canvasW * 0.0070, canvasW * 0.0017);
+  rect(x - r * 0.30, y - r * 0.06, r * 0.60, Math.max(2, r * 0.14));
 }
 
 function drawCelloIon(p, L) {
@@ -1541,15 +1542,19 @@ function drawCelloIon(p, L) {
   c.setAlpha(alpha);
   fill(c);
   // SO₄²⁻ は文字数が多いので楕円(横長)に。Zn²⁺ は通常の丸
+  let elW, elH;
   if (p.type === 'SO₄²⁻') {
-    ellipse(x, baseY, canvasW * 0.045, canvasW * 0.024);
+    elW = Math.max(40, canvasW * 0.045);
+    elH = Math.max(22, canvasW * 0.024);
   } else {
-    ellipse(x, baseY, canvasW * 0.024, canvasW * 0.024);
+    elW = elH = Math.max(22, canvasW * 0.025);
   }
+  ellipse(x, baseY, elW, elH);
   fill(255, alpha);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  textSize(Math.max(9, canvasW / (p.type === 'SO₄²⁻' ? 115 : 100)));
+  // テキストは縦サイズに連動 (はみ出さない)
+  textSize(elH * (p.type === 'SO₄²⁻' ? 0.42 : 0.40));
   text(p.type, x, baseY);
 }
 
@@ -1558,13 +1563,14 @@ function drawIon(x, y, label, colorHex, alpha) {
   const c = color(colorHex);
   c.setAlpha(alpha);
   fill(c);
-  const r = canvasW * 0.022;
+  // 円: スマホでも文字より大きくなるよう最小サイズを確保
+  const r = Math.max(22, canvasW * 0.025);
   ellipse(x, y, r, r);
-  // label
   fill(255, alpha);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  textSize(Math.max(10, canvasW / 95));
+  // テキストは円サイズに連動 (はみ出さない)
+  textSize(r * 0.38);
   text(label, x, y);
 }
 

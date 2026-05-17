@@ -1569,8 +1569,8 @@ function drawIon(x, y, label, colorHex, alpha) {
   fill(255, alpha);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  // テキストは円サイズに連動 (はみ出さない)
-  textSize(r * 0.38);
+  // テキストは円サイズに連動 (はみ出さない) — acid-cell と統一
+  textSize(r * 0.48);
   text(label, x, y);
 }
 

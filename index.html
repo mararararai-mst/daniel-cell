@@ -1196,13 +1196,13 @@ function drawHighlight(L) {
       x = L.znElecX - L.electrodeW * 1.2;
       y = L.electrodeTopY - 30;
       w = L.electrodeW * 2.4;
-      h = (L.liquidBottomY - L.electrodeTopY) + 35;
+      h = (L.liquidBottomY - L.electrodeTopY) + 10;
       break;
     case 'cu':
       x = L.cuElecX - L.electrodeW * 1.4;
       y = L.electrodeTopY - 30;
       w = L.electrodeW * 2.8;
-      h = (L.liquidBottomY - L.electrodeTopY) + 35;
+      h = (L.liquidBottomY - L.electrodeTopY) + 10;
       break;
     case 'cuso4':
       x = L.rightBeakerX - 6;
@@ -1406,9 +1406,9 @@ function drawVoltMeter(L) {
 function drawElectrode(x, L, kind, label, sign) {
   // electrode is a vertical rod inserted into the liquid
   const top = L.electrodeTopY;
-  // ビーカー底から確実に内側で終わるよう余裕大きめに
+  // ビーカー底から確実に内側で終わるよう余裕しっかり取る
   const beakerBottom = L.beakerY + L.beakerH;
-  const bot = Math.min(L.liquidBottomY - 12, beakerBottom - 28);
+  const bot = Math.min(L.liquidBottomY - 18, beakerBottom - 40);
   // 残量(chargeLevel)に応じて電極の太さが変化:
   //   Zn(-): 亜鉛が溶け出してやせ細る (1.0 → 0.55)
   //   Cu(+): 銅が析出して厚くなる (1.0 → 1.45)
@@ -1492,8 +1492,10 @@ function drawZn2(p, L) {
   // ease-out: fast then slow (drifting feel)
   const easedT = 1 - Math.pow(1 - p.t, 2.2);
   const x = lerp(startX, endX, easedT);
-  // gentle downward drift + sinusoidal wobble
-  const y = startY + p.t * 24 + Math.sin(p.t * Math.PI * 2.5 + p.lifetime * 3) * 5;
+  // gentle downward drift + sinusoidal wobble (ビーカー底を超えないようクリップ)
+  const yRaw = startY + p.t * 24 + Math.sin(p.t * Math.PI * 2.5 + p.lifetime * 3) * 5;
+  const yMax = (L.beakerY + L.beakerH) - 20;
+  const y = Math.min(yRaw, yMax);
   const alpha = (p.t < 0.20 ? p.t / 0.20 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 255;
   drawIon(x, y, 'Zn²⁺', '#E8A040', alpha);
 }
@@ -1508,7 +1510,9 @@ function drawCu2(p, L) {
   // ease-in: slow then fast (attracted feel)
   const easedT = Math.pow(p.t, 1.5);
   const x = lerp(startX, endX, easedT);
-  const y = startY + Math.sin(p.t * Math.PI * 2.5 + p.lifetime * 2) * 5;
+  const yRaw = startY + Math.sin(p.t * Math.PI * 2.5 + p.lifetime * 2) * 5;
+  const yMax = (L.beakerY + L.beakerH) - 20;
+  const y = Math.min(yRaw, yMax);
   const alpha = (p.t < 0.10 ? p.t / 0.10 : (p.t > 0.85 ? (1 - p.t) / 0.15 : 1)) * 255;
   drawIon(x, y, 'Cu²⁺', '#5FA8D8', alpha);
 }

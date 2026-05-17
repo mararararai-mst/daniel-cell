@@ -1520,9 +1520,10 @@ function drawCu2(p, L) {
 function drawZnEmit(p, L) {
   // small electron particle that emerges at Zn electrode surface and rises
   // up through the electrode body toward the wire — "the left-behind electrons"
-  const liquidTop = L.liquidTopY + 8;
-  const liquidBot = L.liquidBottomY - 15;
-  const startY = lerp(liquidTop, liquidBot, p.surfaceY);
+  const liquidTop = L.liquidTopY + 12;
+  // 電極の bot と一致させて、電子が電極の外に飛び出ないように
+  const electrodeBot = Math.min(L.liquidBottomY - 18, (L.beakerY + L.beakerH) - 40);
+  const startY = lerp(liquidTop, electrodeBot - 12, p.surfaceY);
   // rises from electrode surface to the top of the electrode (then wire takes over)
   const y = lerp(startY, L.electrodeTopY + 4, p.t);
   const x = L.znElecX; // inside the electrode body

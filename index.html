@@ -1406,7 +1406,9 @@ function drawVoltMeter(L) {
 function drawElectrode(x, L, kind, label, sign) {
   // electrode is a vertical rod inserted into the liquid
   const top = L.electrodeTopY;
-  const bot = L.liquidBottomY - 8;
+  // ビーカー底からはみ出ないよう、液面底とビーカー底の余裕分小さい方を採用
+  const beakerBottom = L.beakerY + L.beakerH;
+  const bot = Math.min(L.liquidBottomY - 8, beakerBottom - 16);
   // 残量(chargeLevel)に応じて電極の太さが変化:
   //   Zn(-): 亜鉛が溶け出してやせ細る (1.0 → 0.55)
   //   Cu(+): 銅が析出して厚くなる (1.0 → 1.45)
